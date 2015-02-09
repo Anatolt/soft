@@ -1,10 +1,5 @@
 ; заменялка строчная
-
-; dlinna_stroki = CountGadgetItems(str1)
-; Debug dlinna_stroki 
-; теперь мы знает что CountGadgetItems не считает количество символов в строках. только кол-во строк в таблице
-; нашёл команды Len (измерение длины строки) и Mid (обрезка).
-; прога ищет только одно - первое совпадение
+; теперь результат не срёт 3 раза в дебаггер
 
 OpenWindow(0,100,100,320,160,"Заменялка строчная")
 str1 = StringGadget(#PB_Any,10,10,300,20,"Строка тестового текста здесь")
@@ -15,19 +10,15 @@ str2 = StringGadget(#PB_Any,10,130,300,20,"")
 
 Repeat
   event = WaitWindowEvent()
-  If EventGadget() = btn
+  If event = #PB_Event_Gadget And EventGadget() = btn
     chto_ischem$ = GetGadgetText(chto_ischem)
     na_chto_menyaem$ = GetGadgetText(na_chto_menyaem)
     str1$ = GetGadgetText(str1)
-    dlina_stroki = Len(str1$)
-    Debug "dlina_stroki " + Str(dlina_stroki)
-    dlina_chto_ischem = Len(chto_ischem$)
-    Debug "dlina_chto_ischem " + Str(dlina_chto_ischem)
-    search = FindString(str1$,chto_ischem$)
-    Debug "search " + Str(search)
+    dlina_stroki = Len(str1$) :     Debug "dlina_stroki " + Str(dlina_stroki)
+    dlina_chto_ischem = Len(chto_ischem$) :     Debug "dlina_chto_ischem " + Str(dlina_chto_ischem)
+    search = FindString(str1$,chto_ischem$) :     Debug "search " + Str(search)
     If search
-      pauza = search + dlina_chto_ischem
-      Debug "pauza " + Str(pauza)
+      pauza = search + dlina_chto_ischem :       Debug "pauza " + Str(pauza)
       txt$ = Mid(str1$,0,search-1) + "[" + na_chto_menyaem$ + "]" + Mid(str1$,pauza,dlina_stroki)
       SetGadgetText(str2, txt$)
     Else
