@@ -5,7 +5,9 @@
 OpenWindow(#PB_Any, 100, 100, 540, 400, "Найти и уничтожить", #PB_Window_SystemMenu | #PB_Window_MinimizeGadget)
   pole1 = EditorGadget(#PB_Any, 10, 40, 190, 350)
   pole2 = EditorGadget(#PB_Any, 340, 40, 190, 310)
-  pole_del = EditorGadget(#PB_Any, 210, 70, 120, 320)
+  pole_del1 = StringGadget(#PB_Any, 210, 70, 120, 20, "plus")
+  pole_del2 = StringGadget(#PB_Any, 210, 100, 120, 20, "Obiwаn")
+  pole_del3 = StringGadget(#PB_Any, 210, 130, 120, 20, "Klochkov")
   txt2 = TextGadget(#PB_Any, 10, 10, 100, 25, "Поле 1")
   txt3 = TextGadget(#PB_Any, 340, 10, 100, 25, "Поле 2")
   copy = ButtonGadget(#PB_Any, 340, 360, 190, 25, "← Копировать")
@@ -26,9 +28,6 @@ AddGadgetItem(pole1,-1,"[16:24:29] aerohead вышел(а) из комнаты")
 AddGadgetItem(pole1,-1,"[16:46:05] Ozz_Klochkov вышел(а) из комнаты")
 AddGadgetItem(pole1,-1,"[17:35:21] plus`` вошёл(а) в комнату")
 AddGadgetItem(pole1,-1,"[17:40:15] plus`` вышел(а) из комнаты")
-AddGadgetItem(pole_del,-1,"plus")
-AddGadgetItem(pole_del,-1,"Obiwаn")
-AddGadgetItem(pole_del,-1,"Ozz_Klochkov")
 
 Repeat 
   event = WaitWindowEvent() 
@@ -37,20 +36,17 @@ Repeat
       Case btn_del
         ClearGadgetItems(pole2)
         numberOfStringsPole1 = CountGadgetItems(pole1) - 1        ;считаем количество строк поля со списком исходных данных
-        Debug "numberOfStringsPole1 " + numberOfStringsPole1
-        numberOfStringsDel = CountGadgetItems(pole_del) - 1       ;считаем количество строк поля со списком на удаление
         For i = 0 To numberOfStringsPole1
           txt$ = GetGadgetItemText(pole1,i)
-          For j = 0 To numberOfStringsDel
-            str$ = GetGadgetItemText(pole_del,j)
-            Debug str$ + " vs " + txt$
-            If FindString(txt$,str$)  
+          str1$ = GetGadgetText(pole_del1)
+          str2$ = GetGadgetText(pole_del2)
+          str3$ = GetGadgetText(pole_del3)
+            If FindString(txt$,str1$) Or FindString(txt$,str2$) Or FindString(txt$,str3$) 
               Debug "удаляем"
             Else
               AddGadgetItem(pole2,-1,txt$)
               Debug "оставляем"
             EndIf 
-          Next
         Next
         
       Case copy
@@ -65,7 +61,7 @@ Repeat
   
 Until event = #PB_Event_CloseWindow
 ; IDE Options = PureBasic 5.31 (Windows - x64)
-; CursorPosition = 39
-; FirstLine = 21
+; CursorPosition = 48
+; FirstLine = 23
 ; EnableUnicode
 ; EnableXP
