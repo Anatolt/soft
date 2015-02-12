@@ -1,27 +1,22 @@
 ; заменялка строчная
 
-; я понял наконец, что команда Mid вторым агрументом считает длинну отрезка, а не позицию!..
-; удалось победить пример с цифрами, но пример с текстом пока не по силам. 
+OpenWindow(0,100,100,520,160,"Заменялка строчная")
 
-OpenWindow(0,100,100,320,160,"Заменялка строчная")
+ishodnik = StringGadget(#PB_Any,10,10,500,20,"Строка текста здесь. Тестовоготекста. Ещё текста тут")
+chto_ischem = StringGadget(#PB_Any,10,40,500,20,"текста") : na_chto_menyaem = StringGadget(#PB_Any,10,70,500,20,"хуекста")
 
-; с такими данными - не работает
-;ishodnik = StringGadget(#PB_Any,10,10,300,20,"Строка тестового текста здесь. тестовоготекста. еще этих французских тестовых текста здесь")
-;chto_ischem = StringGadget(#PB_Any,10,40,300,20,"текста")
-;na_chto_menyaem = StringGadget(#PB_Any,10,70,300,20,"хуекста")
+; ishodnik = StringGadget(#PB_Any,10,10,500,20,"123y56y789y0") : chto_ischem = StringGadget(#PB_Any,10,40,500,20,"y") : na_chto_menyaem = StringGadget(#PB_Any,10,70,500,20,"хx")
+btn = ButtonGadget(#PB_Any,10,100,500,20,"Выполнить")
+result = StringGadget(#PB_Any,10,130,500,20,"")
 
-ishodnik = StringGadget(#PB_Any,10,10,300,20,"123y56y789y0")
-chto_ischem = StringGadget(#PB_Any,10,40,300,20,"y")
-na_chto_menyaem = StringGadget(#PB_Any,10,70,300,20,"хx")
-btn = ButtonGadget(#PB_Any,10,100,300,20,"Выполнить")
-result = StringGadget(#PB_Any,10,130,300,20,"")
+; закрывалка по эскейпу
+; убрал из цикла
+If CreatePopupMenu(0) : MenuItem(2, "Quit") : EndIf : AddKeyboardShortcut(0, #PB_Shortcut_Escape, 2)
 
 Repeat
   event = WaitWindowEvent()
-  ; закрывалка по эскейпу
-  If CreatePopupMenu(0) : MenuItem(2, "Quit") : EndIf
-  If event = #PB_Event_Menu And EventMenu() = 2 : event = #PB_Event_CloseWindow : EndIf
-  AddKeyboardShortcut(0, #PB_Shortcut_Escape, 2)
+  
+  If event = #PB_Event_Menu And EventMenu() = 2 : event = #PB_Event_CloseWindow : EndIf ; закрывалка по эскейпу
   
   If event = #PB_Event_Gadget And EventGadget() = btn
     txt$ = ""
@@ -38,12 +33,12 @@ Repeat
         txt$ = txt$ + cut$ + "[" + na_chto_menyaem$ + "]": Debug "result$ = " + txt$
         SetGadgetText(result, txt$)
         i = search + 1 : Debug "i = " + Str(i)
-        search = FindString(ishodnik$,chto_ischem$,i,#PB_String_NoCase) : Debug ishodnik$ + " ishodnik" : Debug "search = " + Str(search)
-        j = search - i: Debug "j = " + Str(j)
-        cut$ = Mid(ishodnik$,i,j) : Debug "cut$ = " + cut$
+        search = FindString(ishodnik$,chto_ischem$,i,#PB_String_NoCase) : Debug " ishodnik " + ishodnik$: Debug "search = " + Str(search)
+        j = search - i + 1 - dlina_chto_ischem: Debug "j = " + Str(j)
+        cut$ = Mid(ishodnik$,i+dlina_chto_ischem-1,j) : Debug "cut$ = " + cut$
         Debug " "
       Until search = 0
-      cut$ = Mid(ishodnik$,i) : Debug "cut$ = " + cut$
+      cut$ = Mid(ishodnik$,i+dlina_chto_ischem-1) : Debug "cut$ = " + cut$
       txt$ = txt$ + cut$
       SetGadgetText(result, txt$)
     Else
