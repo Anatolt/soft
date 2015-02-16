@@ -1,0 +1,30 @@
+Global Window_0
+ 
+Global pole1, pole2, txt2, txt3, copy, btn, pole_del
+
+Procedure OpenWindow_0(x = 100, y = 100, width = 540, height = 400)
+  Window_0 = OpenWindow(#PB_Any, x, y, width, height, "Найти и уничтожить", #PB_Window_SystemMenu | #PB_Window_MinimizeGadget)
+  pole1 = EditorGadget(#PB_Any, 10, 40, 190, 350)
+  pole2 = EditorGadget(#PB_Any, 340, 40, 190, 310)
+  txt2 = TextGadget(#PB_Any, 10, 10, 100, 25, "Поле 1")
+  txt3 = TextGadget(#PB_Any, 340, 10, 100, 25, "Поле 2")
+  copy = ButtonGadget(#PB_Any, 340, 360, 190, 25, "← Копировать")
+  btn = ButtonGadget(#PB_Any, 210, 40, 120, 25, "Удалить →")
+  pole_del = EditorGadget(#PB_Any, 210, 70, 120, 320)
+EndProcedure
+ 
+Procedure Window_0_Events(event)
+  Select event
+    Case #PB_Event_CloseWindow
+      ProcedureReturn #False
+ 
+    Case #PB_Event_Menu
+      Select EventMenu()
+      EndSelect
+ 
+    Case #PB_Event_Gadget
+      Select EventGadget()
+      EndSelect
+  EndSelect
+  ProcedureReturn #True
+EndProcedure
