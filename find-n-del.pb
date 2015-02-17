@@ -1,8 +1,13 @@
-; Починили с учителем кодировки. Дело былов BOM UTF. Открываем c помощью NPP и сохраняем в UTF без BOM. Всё становится на места.
-; Разобрались с гитхабом. Оказывается надо было клонировать чтобы загрузить проект из облака на комп.
- 
-IncludeFile "find-n-del-test.pbf"
-OpenWindow_0()
+; программа удаляет строки если они содержат искомый текст
+OpenWindow(#PB_Any, 100, 100, 540, 400, "Найти и уничтожить", #PB_Window_SystemMenu | #PB_Window_MinimizeGadget)
+  pole1 = EditorGadget(#PB_Any, 10, 40, 190, 350)
+  pole2 = EditorGadget(#PB_Any, 340, 40, 190, 310)
+  txt2 = TextGadget(#PB_Any, 10, 10, 100, 25, "Поле 1")
+  txt3 = TextGadget(#PB_Any, 340, 10, 100, 25, "Поле 2")
+  copy = ButtonGadget(#PB_Any, 340, 360, 190, 25, "← Копировать")
+  btn = ButtonGadget(#PB_Any, 210, 40, 120, 25, "Удалить →")
+  pole_del = EditorGadget(#PB_Any, 210, 70, 120, 320)
+  
 AddGadgetItem(pole1,-1,"[14:59:08] 5UN5H1N3 вышел(а) из комнаты")
 AddGadgetItem(pole1,-1,"[15:04:42] χ@ηΔ€® вышел(а) из комнаты")
 AddGadgetItem(pole1,-1,"[15:13:29] <Obiwаn> .")
