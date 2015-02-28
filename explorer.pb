@@ -1,18 +1,19 @@
-; сделал меню с помощью тулбаров. 
-; научился их подсвечивать
+; v0.5
+; привязал клавиатурные команды для управления видом
 
 ; планы
 ; подгонять содержимое под размер окна
 ; использовать значки винды
-; привязать клавиатурные команды для управления видом
 ; научиться открывать все файлы
 ; научиться рисовать
+
 
 Enumeration
   #Large
   #Small
   #List
   #Report
+  #LargeIco
 EndEnumeration
 
 OpenWindow(0,200,200,500,300,"Открывалка файлов",#PB_Window_SizeGadget|#PB_Window_SystemMenu )
@@ -28,6 +29,16 @@ If CreateToolBar(0,WindowID(0))
   ToolBarStandardButton(#List, #PB_ToolBarIcon_Help)
   ToolBarStandardButton(#Report, #PB_ToolBarIcon_Help)
 EndIf
+If CreatePopupMenu 
+  MenuItem(#Large, "Large")
+  MenuItem(#Small, "Small")
+  MenuItem(#List, "List")
+  MenuItem(#Report, "Report")
+EndIf
+AddKeyboardShortcut(0, #PB_Shortcut_1, #Large)
+AddKeyboardShortcut(0, #PB_Shortcut_2, #Small)
+AddKeyboardShortcut(0, #PB_Shortcut_3, #List)
+AddKeyboardShortcut(0, #PB_Shortcut_4, #Report)
 folders = ExplorerListGadget(#PB_Any,0,30,500,200,dir$)
 SetToolBarButtonState(0,#Report,#PB_ToolBar_Toggle)
 
@@ -35,7 +46,7 @@ Repeat
   event = WaitWindowEvent()
   If event = #PB_Event_Menu 
     Select EventGadget() 
-      Case #Large 
+      Case #Large
         value = #PB_Explorer_LargeIcon
       Case #Small 
         value = #PB_Explorer_SmallIcon
