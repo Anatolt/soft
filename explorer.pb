@@ -1,7 +1,5 @@
 ; v0.6
-; благодаря каменту учителя к прошлому уроку осознал что тулбал - тоже меню, убрал лишние строки
-; нарисовал кнопку, пытался сделать её больше - не вышло.
-; нашёл реагирование на изменение размера окна, но пока не понял как поменять гаджет
+; нарисовал еще одну кнопку
 
 ; планы
 ; подгонять содержимое под размер окна
@@ -23,13 +21,21 @@ Procedure CreateButtons()
   Box(0,0,16,16,$000000)
   Box(4,4,8,8,$009900)
   StopDrawing()
+  CreateImage(#Small,16,16)
+  StartDrawing(ImageOutput(#Small))
+  Box(0,0,16,16,$000000)
+  Box(1,1,2,2,$009900)
+  Box(1,5,2,2,$009900)
+  Box(5,1,2,2,$009900)
+  Box(5,5,2,2,$009900)
+  StopDrawing()
 EndProcedure
 CreateButtons()
 
 OpenWindow(0,200,200,500,300,"Открывалка файлов",#PB_Window_SizeGadget|#PB_Window_SystemMenu )
 If CreateToolBar(0,WindowID(0))
   ToolBarImageButton(#Large, ImageID(#Large))
-  ToolBarStandardButton(#Small, #PB_ToolBarIcon_Help)
+  ToolBarImageButton(#Small, ImageID(#Small))
   ToolBarStandardButton(#List, #PB_ToolBarIcon_Help)
   ToolBarStandardButton(#Report, #PB_ToolBarIcon_Help)
 EndIf
