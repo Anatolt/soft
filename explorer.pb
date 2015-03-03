@@ -1,11 +1,12 @@
-; v0.6
-; нарисовал еще одну кнопку
+; v0.7
+; научился подгонять содержимое под размер окна
+; YES! Я нашёл его! ResizeGadget
+; дорисовал оставшиеся 2 кнопки, перерисовал их элипсами
 
 ; планы
-; подгонять содержимое под размер окна
 ; использовать значки винды
 ; научиться открывать все файлы
-; научиться рисовать
+; научиться круто рисовать
 ; научиться присваивать аккордовые клавиатурные сочетания
 
 Enumeration
@@ -18,16 +19,22 @@ EndEnumeration
 Procedure CreateButtons()
   CreateImage(#Large,16,16)
   StartDrawing(ImageOutput(#Large))
-  Box(0,0,16,16,$000000)
-  Box(4,4,8,8,$009900)
+  Circle(7,7,4,$009900)
   StopDrawing()
   CreateImage(#Small,16,16)
   StartDrawing(ImageOutput(#Small))
-  Box(0,0,16,16,$000000)
-  Box(1,1,2,2,$009900)
-  Box(1,5,2,2,$009900)
-  Box(5,1,2,2,$009900)
-  Box(5,5,2,2,$009900)
+  Circle(4,4,2,$009900)
+  Circle(4,11,2,$009900)
+  Circle(11,4,2,$009900)
+  Circle(11,11,2,$009900)
+  StopDrawing()
+  CreateImage(#List,16,16)
+  StartDrawing(ImageOutput(#List))
+  Ellipse(8,8,6,3,$009900)
+  StopDrawing()
+  CreateImage(#Report,16,16)
+  StartDrawing(ImageOutput(#Report))
+  Ellipse(8,8,3,6,$009900)
   StopDrawing()
 EndProcedure
 CreateButtons()
@@ -36,14 +43,19 @@ OpenWindow(0,200,200,500,300,"Открывалка файлов",#PB_Window_Size
 If CreateToolBar(0,WindowID(0))
   ToolBarImageButton(#Large, ImageID(#Large))
   ToolBarImageButton(#Small, ImageID(#Small))
-  ToolBarStandardButton(#List, #PB_ToolBarIcon_Help)
-  ToolBarStandardButton(#Report, #PB_ToolBarIcon_Help)
+  ToolBarImageButton(#List, ImageID(#List))
+  ToolBarImageButton(#Report, ImageID(#Report))
+;  ToolBarStandardButton(#List, #PB_ToolBarIcon_Help)
+ ; ToolBarStandardButton(#Report, #PB_ToolBarIcon_Help)
 EndIf
 AddKeyboardShortcut(0, #PB_Shortcut_1, #Large)
 AddKeyboardShortcut(0, #PB_Shortcut_2, #Small)
 AddKeyboardShortcut(0, #PB_Shortcut_3, #List)
 AddKeyboardShortcut(0, #PB_Shortcut_4, #Report)
-folders = ExplorerListGadget(#PB_Any,0,30,500,200,dir$)
+fwidth = WindowWidth(0) - 6
+fheight = WindowHeight(0)-ToolBarHeight(0) - 6
+folders = ExplorerListGadget(#PB_Any,3,ToolBarHeight(0)+3,fwidth,fheight,dir$)
+;folders = ExplorerListGadget(#PB_Any,0,30,500,200,dir$)
 SetToolBarButtonState(0,#Report,#PB_ToolBar_Toggle)
 
 
@@ -51,9 +63,9 @@ Repeat
   event = WaitWindowEvent()
   Select event
     Case #PB_Event_SizeWindow
-      Debug WindowWidth(0)
-      SetGadgetAttribute(folders,Width,WindowWidth(0))
-      SetGadgetAttribute(folders,Height,WindowHeight(0)-ToolBarHeight(0))
+      fwidth = WindowWidth(0) - 6
+      fheight = WindowHeight(0)-ToolBarHeight(0) - 6
+      ResizeGadget(folders, 3, ToolBarHeight(0)+3, fwidth, fheight)
     Case #PB_Event_Menu 
       Select EventGadget() 
         Case #Large
@@ -73,7 +85,6 @@ Repeat
               Debug GetGadgetItemText(folders,GetGadgetState(folders))
               RunProgram(GetGadgetItemText(folders,GetGadgetState(folders)))
           EndSelect
-          ;RunProgram()
       EndSelect
       SetGadgetAttribute(folders,#PB_Explorer_DisplayMode,value)
       For i = #Large To #Report
