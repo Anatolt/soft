@@ -1,13 +1,10 @@
-; v0.7
-; научился подгонять содержимое под размер окна
-; YES! Я нашёл его! ResizeGadget
-; дорисовал оставшиеся 2 кнопки, перерисовал их элипсами
+version$ = "v0.8"
+; аккордовые сочетания так просто! #PB_Shortcut_Alt | #PB_Shortcut_1 Alt+1
+; оказывается можно складывать текстовые строки прямо внутри гаджетов!
 
 ; планы
 ; использовать значки винды
 ; научиться открывать все файлы
-; научиться круто рисовать
-; научиться присваивать аккордовые клавиатурные сочетания
 
 Enumeration
   #Large
@@ -39,7 +36,7 @@ Procedure CreateButtons()
 EndProcedure
 CreateButtons()
 
-OpenWindow(0,200,200,500,300,"Открывалка файлов",#PB_Window_SizeGadget|#PB_Window_SystemMenu )
+OpenWindow(0,200,200,500,300,"Открывалка не всех файлов " + version$,#PB_Window_SizeGadget|#PB_Window_SystemMenu )
 If CreateToolBar(0,WindowID(0))
   ToolBarImageButton(#Large, ImageID(#Large))
   ToolBarImageButton(#Small, ImageID(#Small))
@@ -48,10 +45,10 @@ If CreateToolBar(0,WindowID(0))
 ;  ToolBarStandardButton(#List, #PB_ToolBarIcon_Help)
  ; ToolBarStandardButton(#Report, #PB_ToolBarIcon_Help)
 EndIf
-AddKeyboardShortcut(0, #PB_Shortcut_1, #Large)
-AddKeyboardShortcut(0, #PB_Shortcut_2, #Small)
-AddKeyboardShortcut(0, #PB_Shortcut_3, #List)
-AddKeyboardShortcut(0, #PB_Shortcut_4, #Report)
+AddKeyboardShortcut(0, #PB_Shortcut_Alt | #PB_Shortcut_1, #Large)
+AddKeyboardShortcut(0, #PB_Shortcut_Alt | #PB_Shortcut_2, #Small)
+AddKeyboardShortcut(0, #PB_Shortcut_Alt | #PB_Shortcut_3, #List)
+AddKeyboardShortcut(0, #PB_Shortcut_Alt | #PB_Shortcut_4, #Report)
 fwidth = WindowWidth(0) - 6
 fheight = WindowHeight(0)-ToolBarHeight(0) - 6
 folders = ExplorerListGadget(#PB_Any,3,ToolBarHeight(0)+3,fwidth,fheight,dir$)
