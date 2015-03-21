@@ -1,31 +1,35 @@
-version$ = "v0.1"
-OpenWindow(0,100,100,530,290,"Комментировалка " + version$)
+version$ = "v0.2"
+OpenWindow(0,100,100,570,290,"Комментировалка " + version$)
 
-Global pole2, pole1, str
+Global pole2, pole1, str_begin, str_end
 
-pole1 = EditorGadget(#PB_Any, 10, 40, 190, 230)
-AddGadgetItem(pole1,-1,"этот")
-AddGadgetItem(pole1,-1,"текст")
-AddGadgetItem(pole1,-1,"нужно")
-AddGadgetItem(pole1,-1,"закомментировать")
-pole2 = EditorGadget(#PB_Any, 330, 40, 190, 230)
-btn = ButtonGadget(#PB_Any, 210, 210, 100, 25, "Ctrl+Enter")
-str = StringGadget(#PB_Any, 210, 100, 100, 25, "# ")
-TextGadget(#PB_Any, 210, 40, 120, 40, "Добавить в начале каждой строки")
-; TextGadget(#PB_Any, 210, 100, 120, 20, "строки из поля 1")
 TextGadget(#PB_Any, 10, 10, 100, 25, "Исходник")
-TextGadget(#PB_Any, 320, 10, 100, 25, "Результат")
+pole1 = EditorGadget(#PB_Any, 10, 40, 190, 230)
+AddGadgetItem(pole1, -1, "этот")
+AddGadgetItem(pole1, -1, "текст")
+AddGadgetItem(pole1, -1, "нужно")
+AddGadgetItem(pole1, -1, "взять в кавычки")
+TextGadget(#PB_Any, 370, 10, 100, 25, "Результат")
+pole2 = EditorGadget(#PB_Any, 370, 40, 190, 230)
+AddGadgetItem(pole2, -1, "'этот'")
+AddGadgetItem(pole2, -1, "'текст'")
+AddGadgetItem(pole2, -1, "'нужно'")
+AddGadgetItem(pole2, -1, "'взять в кавычки'")
+str_begin = StringGadget(#PB_Any, 210, 40, 150, 20, "'")
+btn_begin = ButtonGadget(#PB_Any, 210, 160, 150, 25, "Добавить в начале строки")
+str_end = StringGadget(#PB_Any, 210, 130, 150, 20, "'")
+btn_end = ButtonGadget(#PB_Any, 210, 70, 150, 25, "Добавить в конце строки")
+btn_both = ButtonGadget(#PB_Any, 210, 220, 150, 25, "Оба")
+
 ; управление с клавы
 If CreatePopupMenu(0) 
   MenuItem(2, "Quit") 
-  MenuItem(1, "Do the job") 
 EndIf 
 AddKeyboardShortcut(0, #PB_Shortcut_Escape, 2)
-AddKeyboardShortcut(0, #PB_Shortcut_Control | #PB_Shortcut_Return, 1)
 
-Procedure Do_the_job()
+Procedure Add_to_begin()
   ClearGadgetItems(pole2)
-  add$ = GetGadgetText(str)
+  add$ = GetGadgetText(str_begin)
   numberOfStrings = CountGadgetItems(pole1) - 1
   For counter = 0 To numberOfStrings
     textPole1$ = GetGadgetItemText(pole1,counter)
@@ -33,18 +37,41 @@ Procedure Do_the_job()
   Next
 EndProcedure
 
+Procedure Add_to_end()
+  ClearGadgetItems(pole2)
+  add$ = GetGadgetText(str_end)
+  numberOfStrings = CountGadgetItems(pole1) - 1
+  For counter = 0 To numberOfStrings
+    textPole1$ = GetGadgetItemText(pole1,counter)
+    AddGadgetItem(pole2,-1,textPole1$+add$)
+  Next
+EndProcedure
+
+Procedure Add_to_both()
+  ClearGadgetItems(pole2)
+  add_begin$ = GetGadgetText(str_begin)
+  add_end$ = GetGadgetText(str_end)
+  numberOfStrings = CountGadgetItems(pole1) - 1
+  For counter = 0 To numberOfStrings
+    textPole1$ = GetGadgetItemText(pole1,counter)
+    AddGadgetItem(pole2,-1,add_begin$+textPole1$+add_end$)
+  Next
+EndProcedure
+
 Repeat
   event = WaitWindowEvent()
   ; закрывалка по эскейпу
-  If event = #PB_Event_Menu 
-    Select EventMenu()
-      Case 2 
-        event = #PB_Event_CloseWindow
-      Case 1
-        Do_the_job()
-    EndSelect
+  If event = #PB_Event_Menu And EventMenu() = 2 
+    event = #PB_Event_CloseWindow
   EndIf
-  If event = #PB_Event_Gadget And EventGadget() = btn
-    Do_the_job()
+  If event = #PB_Event_Gadget 
+    Select EventGadget() 
+      Case btn_begin
+        Add_to_begin()
+      Case btn_end
+        Add_to_end()
+      Case btn_both
+        Add_to_both()
+    EndSelect
   EndIf
 Until event = #PB_Event_CloseWindow
