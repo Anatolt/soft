@@ -1,6 +1,8 @@
-; удалялка дубликатов строк v0.2 не работает
+; удалялка дубликатов строк v0.4 не работает
 OpenWindow(0,100,100,530,290,"Удалялка дублей")
 pole1 = EditorGadget(#PB_Any, 10, 40, 190, 230)
+
+;генерим 10 произвольных строк с цифрами
 For i=0 To 9
   r=Random(9)
   AddGadgetItem(pole1,-1,Str(r))
@@ -16,30 +18,33 @@ If CreatePopupMenu(0) : MenuItem(2, "Quit") : EndIf : AddKeyboardShortcut(0, #PB
 
 Repeat
   event = WaitWindowEvent()
-  
+  NewList FuckingList()
   If event = #PB_Event_Menu And EventMenu() = 2 : event = #PB_Event_CloseWindow : EndIf ; закрывалка по эскейпу
   If event = #PB_Event_Gadget And EventGadget() = btn
     ClearGadgetItems(pole2)
     numberOfStrings = CountGadgetItems(pole1) - 1
-    Debug numberOfStrings
-    For counter1 = 0 To numberOfStrings
-      textPole1_1$ = GetGadgetItemText(pole1,counter1)
-      For counter2 = 0 To numberOfStrings
-        Debug "#"+Str(counter1)+"_"+textPole1_1$ +"vs"+ "#"+Str(counter2)+"_"+textPole1_2$
-        If counter1 = counter2
-          Debug "skip cause # same"
+    For i = 0 To numberOfStrings
+      first$ = GetGadgetItemText(pole1,i)
+      For j = 0 To numberOfStrings
+        second$ = GetGadgetItemText(pole1,j)
+        If i = j
           Break
         Else
-          textPole1_2$ = GetGadgetItemText(pole1,counter2)
-          If textPole1_1$ = textPole1_2$
-            Debug "waaa"
-          Else
-            AddGadgetItem(pole2,-1,textPole1_1$)
-            Debug "good"
+          If first$ = second$
+            Debug "совпадонс "+Str(i+1)+" "+Str(j+1)
+            AddElement(FuckingList())
+            FuckingList() = i+1
+            AddElement(FuckingList())
+            FuckingList() = j+1
             Break
           EndIf
         EndIf
       Next
+    Next
+    Debug "---"
+    SortList(FuckingList(),Start)
+    ForEach FuckingList()
+      Debug FuckingList()
     Next
   EndIf
 Until event = #PB_Event_CloseWindow
