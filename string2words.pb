@@ -3,22 +3,9 @@ StringGadget(1,0,0,300,30,"эта программа делит строку н�
 ButtonGadget(2,0,30,300,30,"Do")
 EditorGadget(3,0,60,300,300-60)
 Procedure.s separateString2words(txt$)
-  NewList words.s()
-  LenghWord = FindString(txt$," ")
-  While Not LenghWord = 0
-    word$ = Mid(txt$,startSearch,LenghWord-startSearch)
-    AddElement(words())
-    words() = word$
-    word_cnt + 1
-    startSearch = LenghWord + 1
-    LenghWord = FindString(txt$," ",startSearch)
-  Wend
-  word$ = Mid(txt$,startSearch)
-  AddElement(words())
-  words() = word$
-  word_cnt + 1
-  ForEach words()
-    AddGadgetItem(3,-1,words())
+  ClearGadgetItems(3)
+  For i = 1 To CountString(txt$," ")+1
+    AddGadgetItem(3,-1,StringField(txt$,i," "))
   Next
 EndProcedure
 Repeat
