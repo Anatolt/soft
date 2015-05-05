@@ -4,47 +4,19 @@ ButtonGadget(2,0,30,300,30,"Randomise")
 EditorGadget(3,0,60,300,300-60)
 
 Procedure.s rtip(txt$)
-  Day+1
-  Lives_cnt-1
-  Mood_cnt-1
   txt$ = LCase(txt$)
   NewList words.s()
-  ;
-  LenghWord = FindString(txt$," ")
-  word$ = Mid(txt$,startSearch,LenghWord-startSearch-1)
-  AddElement(words())
-  words() = word$
-  word_cnt + 1
-  startSearch = LenghWord + 1
-  ; если удалить кусок кода выше - прога добавляет лишний пробел после первого слова
-  While Not LenghWord = 0
-    word$ = Mid(txt$,startSearch,LenghWord-startSearch)
+  For i = 1 To CountString(txt$," ")+1
     AddElement(words())
-    words() = word$
-    word_cnt + 1
-    startSearch = LenghWord + 1
-    LenghWord = FindString(txt$," ",startSearch)
-  Wend
-  ;
-  word$ = Mid(txt$,startSearch,Len(txt$)-1)
-  AddElement(words())
-  words() = word$
-  word_cnt + 1
-  ;если удалить кусок кода выше - то пропадает последнее слово
+    words() = StringField(txt$,i," ")
+  Next
   RandomizeList(words())
   ForEach words()
-    output$ + words() + " "; а вот эта зараза добавляет лишнюю _ куда-попало.
+    output$ + words() + " "
   Next
-  output$ = UCase(Mid(output$,0,1))+Mid(output$,2)
+  output$ = UCase(Mid(output$,0,1))+Mid(output$,2) ; делаем первую букву большой
   Debug output$
   AddGadgetItem(3,-1,output$)
-EndProcedure
-
-;привести всё к такому виду
-Procedure.s separateString2words(txt$)
-  For i = 1 To CountString(txt$," ")+1
-    AddGadgetItem(3,-1,StringField(txt$,i," "))
-  Next
 EndProcedure
 
 Repeat
