@@ -1,10 +1,4 @@
-;Рисуем точку на канве.
-;Пользователь может ее перетащить в другое место, нажав и удерживая ЛКМ
-
 ;План
-;Добавляем вторую точку (глобализуем переменные, выносим действие по переносу в процедуру)
-;Протягиваем между ними линию. 
-;Заставляем линию следовать за точками после их перемещения.
 ;Проверяем не нажал ли пользователь на саму линию (формулы вычисления линии?)
 
 ;Пишем прогу, которая рисует линии. 
@@ -19,16 +13,17 @@
 ;редактор пиксельной графики (рисование квадратами) only после изучения изменения масштаба
 
 v$ = "v0.4"
-OpenWindow(13,#PB_Ignore,#PB_Ignore,500,500,"Pain-t "+v$, #PB_Window_SystemMenu | #PB_Window_ScreenCentered )
-CanvasGadget(13,0,0,500,500)
+OpenWindow(13,#PB_Ignore,#PB_Ignore,300,300,"Pain-t "+v$, #PB_Window_SystemMenu | #PB_Window_ScreenCentered )
+CanvasGadget(13,0,0,300,300)
 StartDrawing(CanvasOutput(13))
 X = 30
 Y = 30
-R = 5
+R = 10
 Circle(X,Y,R,$000)
 X2 = 50
 Y2 = 60
 Circle(X2,Y2,R,$000)
+LineXY(X,Y,X2,Y2,$000)
 StopDrawing()
 Repeat
   event = WaitWindowEvent()
@@ -53,18 +48,21 @@ Repeat
       Debug "moved"
       StartDrawing(CanvasOutput(13))
       Circle(X,Y,R,$ffffff)
+      LineXY(X,Y,X2,Y2,$ffffff)
       X = GetGadgetAttribute(13, #PB_Canvas_MouseX)
       Y = GetGadgetAttribute(13, #PB_Canvas_MouseY)
       Circle(X,Y,R,$000000)
+      LineXY(X,Y,X2,Y2,$000)
       StopDrawing()
-      ;popal = 0
     ElseIf popal2 And EventType() = #PB_EventType_LeftButtonUp
       Debug "moved"
       StartDrawing(CanvasOutput(13))
       Circle(X2,Y2,R,$ffffff)
+      LineXY(X,Y,X2,Y2,$ffffff)
       X2 = GetGadgetAttribute(13, #PB_Canvas_MouseX)
       Y2 = GetGadgetAttribute(13, #PB_Canvas_MouseY)
       Circle(X2,Y2,R,$000000)
+      LineXY(X,Y,X2,Y2,$000)
       StopDrawing()
     EndIf
   EndIf
