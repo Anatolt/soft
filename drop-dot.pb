@@ -37,6 +37,8 @@ Repeat
       If X2 < X+R And X2 > X-R And Y2 < Y+R And X2 > Y-R 
         Debug "popal"
         popal = 1
+      Else
+        popal = 0
       EndIf
     ElseIf popal And EventType() = #PB_EventType_LeftButtonUp
       Debug 1
