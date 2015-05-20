@@ -1,7 +1,6 @@
-;очищай канвас и не еби мозги (с) Сенсей
-;Вчера скомпилил симулятор вебмастера для винды
-;как запускать код который я пишу
-;типы переменных https://dl.dropboxusercontent.com/u/943974/Screenshots/ce-_zem_sw5x.png в блоге искать проще чем в переписке скайпа
+;не работает перемещение
+; удаляется только последний элемент
+; если элементов не осталось, а мы нажимаем удалить - прога виснет
 
 ;План
 ;Добавление точек помимо заданных. 
@@ -57,52 +56,67 @@ Procedure drawAll()
   StopDrawing()
 EndProcedure
 
-OpenWindow(13,#PB_Ignore,#PB_Ignore,300,330,"Drag Dot v0.5", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )
+OpenWindow(13,#PB_Ignore,#PB_Ignore,300,330,"Drag Dot v0.6", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )
 ButtonGadget(#Add,0,300,100,30,"Add Dot")
 ButtonGadget(#Move,100,300,100,30,"Move Dot")
 ButtonGadget(#Delete,200,300,100,30,"Delete Dot")
 CanvasGadget(13,0,0,300,300)
 
 CurrentMode = #Add
+DisableGadget(#Add,1)
 Repeat
   event = WaitWindowEvent()
   If Event = #PB_Event_Gadget 
     Select EventGadget() 
       Case 13
+        mouseX = GetGadgetAttribute(13, #PB_Canvas_MouseX)
+        mouseY = GetGadgetAttribute(13, #PB_Canvas_MouseY)
         ;If EventType() = #PB_EventType_LeftButtonDown Or (EventType() = #PB_EventType_MouseMove And GetGadgetAttribute(13, #PB_Canvas_Buttons) & #PB_Canvas_LeftButton)
         If EventType() = #PB_EventType_LeftButtonDown
-          mouseX = GetGadgetAttribute(13, #PB_Canvas_MouseX)
-          mouseY = GetGadgetAttribute(13, #PB_Canvas_MouseY)
-          
           Select CurrentMode
             Case #Add
               addDot(mouseX, mouseY)
+              
             Case #Move
+              If EventType() = #PB_EventType_LeftButtonDown And Not buttonPressed
+                buttonPressed = #True
+                For i = ListSize(dots())-1 To 0 Step -1
+                  SelectElement(dots(),i)
+                  If popal(mouseX,mouseY,dots()\x,dots()\y)
+                    Debug "popal"
+                    offsetX = mouseX - dots()\x
+                    offsetY = mouseY - dots()\y
+                    MoveElement(dots(),#PB_List_Last)
+                    selectedObject = ListSize(dots())-1
+                    Break
+                  EndIf
+                Next
+              ElseIf EventType() = #PB_EventType_MouseMove And buttonPressed And selectedObject > -1
+                SelectElement(dots(),selectedObject)
+                dots()\x = mouseX - offsetX
+                dots()\y = mouseY - offsetY
+              ElseIf EventType() = #PB_EventType_LeftButtonUp And buttonPressed
+                buttonPressed = #False
+                selectedObject = -1
+              EndIf
+              
+            Case #Delete
               If popal(mouseX, mouseY, dots()\x, dots()\y)
-                Debug "popal"
-                popal = 1
-              Else
-                Debug "ne popal"
-                popal = 0
+                DeleteElement(dots())
               EndIf
           EndSelect
         EndIf
-        
-      Case #Add
-        DisableGadget(#Add, 1)
-        DisableGadget(#Delete, 0)
-        DisableGadget(#Move, 0)
-        CurrentMode = #Add
-      Case #Delete
-        DisableGadget(#Add, 0)
-        DisableGadget(#Delete, 1)
-        DisableGadget(#Move, 0)
-        CurrentMode = #Delete
-      Case #Move
-        DisableGadget(#Add, 0)
-        DisableGadget(#Delete, 0)
-        DisableGadget(#Move, 1)
-        CurrentMode = #Move
+
+      Case #Add, #Delete, #Move
+        EventGadget = EventGadget()
+        For Gadget = #Add To #Delete
+          If Gadget = EventGadget
+            DisableGadget(Gadget, 1) 
+          Else
+            DisableGadget(Gadget, 0) ; unset the state of all other gadgets
+          EndIf
+        Next Gadget          
+        CurrentMode = EventGadget 
     EndSelect
     drawAll()
   EndIf
