@@ -1,0 +1,28 @@
+Global Wnd
+
+Global Enter, Server, Login, Pass
+
+
+Procedure OpenWnd(x = 0, y = 0, width = 150, height = 130)
+  Wnd = OpenWindow(#PB_Any, x, y, width, height, "", #PB_Window_SystemMenu | #PB_Window_ScreenCentered)
+  Enter = ButtonGadget(#PB_Any, 10, 100, 130, 25, "Enter")
+  Server = StringGadget(#PB_Any, 10, 10, 130, 25, "srv")
+  Login = StringGadget(#PB_Any, 10, 40, 130, 25, "tolik")
+  Pass = StringGadget(#PB_Any, 10, 70, 130, 25, "passwd")
+EndProcedure
+
+Procedure Wnd_Events(event)
+  Select event
+    Case #PB_Event_CloseWindow
+      ProcedureReturn #False
+
+    Case #PB_Event_Menu
+      Select EventMenu()
+      EndSelect
+
+    Case #PB_Event_Gadget
+      Select EventGadget()
+      EndSelect
+  EndSelect
+  ProcedureReturn #True
+EndProcedure
