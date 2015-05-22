@@ -49,13 +49,23 @@ EndProcedure
 Procedure drawAll()
   StartDrawing(CanvasOutput(13))
   Box(0,0,300,300,$ffffffff)
-  ForEach all()
-    Circle(all()\x, all()\y,R,0)
+  For i = 0 To ListSize(all())-1
+    SelectElement(all(),i)
+    x = all()\x
+    y = all()\y
+    Circle(x,y,R,0)
+    If i > 0
+      SelectElement(all(),i-1)
+      x2 = all()\x
+      y2 = all()\y
+      LineXY(x,y,x2,y2,0)
+      SelectElement(all(),i)
+    EndIf
   Next
   StopDrawing()
 EndProcedure
 
-OpenWindow(13,#PB_Ignore,#PB_Ignore,300,330,"Drag Dot v0.7", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )
+OpenWindow(13,#PB_Ignore,#PB_Ignore,300,330,"drag-n-add-lines v0.7", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )
 ButtonGadget(#Add,0,300,100,30,"Add Dot")
 ButtonGadget(#Move,100,300,100,30,"Move Dot")
 ButtonGadget(#Delete,200,300,100,30,"Delete Dot")
@@ -80,18 +90,19 @@ Repeat
                 SelectElement(all(),ListSize(all())-1)
                 all()\x = mouseX - R/2
                 all()\y = mouseY - R/2
-                Debug "added element ["+Str(all()\x) + "," + Str(all()\y) + "]"
+                Debug "added element ["+Str(all()\x) + "," + Str(all()\y) +"]"
               Else
                 For i = ListSize(all())-1 To 0 Step -1
                   SelectElement(all(),i)
                   If popal(mouseX,mouseY,all()\x,all()\y)
-                    Debug "touched element [" + Str(all()\x) + "," + Str(all()\y) + "]"
+                    Debug "touched element [" + Str(all()\x) + "," + Str(all()\y) + ","+i+"]"
                     offsetX = mouseX - all()\x
                     offsetY = mouseY - all()\y
-                    MoveElement(all(),#PB_List_Last)
-                    selectedObject = ListSize(all())-1
+                    ;MoveElement(all(),#PB_List_Last)
+                    ;selectedObject = ListSize(all())-1
+                    selectedObject = i
                     If CurrentMode = #Delete
-                      Debug "deleted element [" + Str(all()\x) + "," + Str(all()\y)+"]"
+                      Debug "deleted element [" + Str(all()\x) + "," + Str(all()\y) + ","+i+"]"
                       DeleteElement(all())
                     EndIf
                     Break
@@ -106,28 +117,28 @@ Repeat
               SelectElement(all(),selectedObject)
               all()\x = mouseX - offsetX
               all()\y = mouseY - offsetY
-              drawAll()
+;               drawAll()
             EndIf
             
           Case #PB_EventType_LeftButtonUp
             If buttonPressed
               buttonPressed = #False
               selectedObject = -1
-              drawAll()
+;               drawAll()
             EndIf
-          EndSelect
-          
-        Case #Add, #Delete, #Move
-          EventGadget = EventGadget()
-          For Gadget = #Add To #Delete
-            If Gadget = EventGadget
-              DisableGadget(Gadget, 1) 
-            Else
-              DisableGadget(Gadget, 0) ; unset the state of all other gadgets
-            EndIf
-          Next Gadget          
-          CurrentMode = EventGadget 
-      EndSelect
-      ;     drawAll()
-    EndIf
-  Until event = #PB_Event_CloseWindow
+        EndSelect
+        
+      Case #Add, #Delete, #Move
+        EventGadget = EventGadget()
+        For Gadget = #Add To #Delete
+          If Gadget = EventGadget
+            DisableGadget(Gadget, 1) 
+          Else
+            DisableGadget(Gadget, 0) ; unset the state of all other gadgets
+          EndIf
+        Next Gadget          
+        CurrentMode = EventGadget 
+    EndSelect
+    drawAll()
+  EndIf
+Until event = #PB_Event_CloseWindow
