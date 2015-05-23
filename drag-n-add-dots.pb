@@ -1,12 +1,17 @@
+; Добавил процедуру рандома точек
+; добавил кнопку запуска рандома точек
+; добавил кнопку спрятать точки, но она пока не работает
+
 ;===Суть!
 ;Программа сохраняет нарисованное пользователем в виде процедурного кода PureBasic.
 ;Этот код потом можно запустить при следующем запуске программы, получив все нарисованные линии.
 ;Линии возможно изменять после повторной генерации.
 
 ;===План
-;Рисование полигона по точкам
+;завершить полигон - Enter
+; отключение точек, чтобы было видно только линию
 ;Создание текста процедуры рисования линий, соответствующих полигону
-;Перетаскивать линию - ЛКМ, удалять - СКМ, добавлять - ПКМ, завершить полигон - Enter
+;Перетаскивать линию - ЛКМ, удалять - СКМ, добавлять - ПКМ
 
 ;Пишем прогу, которая рисует линии. 
 ;нажимаем первый раз на мышь - ставится первая точка, от неё тянется линия. 
@@ -20,10 +25,15 @@
 ;изменение масштаба
 ;редактор пиксельной графики (рисование квадратами) only после изучения изменения масштаба
 
+#canvasWidth = 300
+#canvasHeigh = 300
+
 Enumeration
   #Add
   #Move
   #Delete
+  #Hide
+  #Random
 EndEnumeration
 
 Structure dot
@@ -31,7 +41,8 @@ Structure dot
   y.w
 EndStructure
 
-Global NewList all.dot(), R = 5
+Global NewList all.dot(), R
+R = 5
 
 Procedure addDot(x,y)
   AddElement(all())
@@ -48,7 +59,7 @@ EndProcedure
 
 Procedure drawAll()
   StartDrawing(CanvasOutput(13))
-  Box(0,0,300,300,$ffffffff)
+  Box(0,0,#canvasWidth,#canvasHeigh,$ffffffff)
   For i = 0 To ListSize(all())-1
     SelectElement(all(),i)
     x = all()\x
@@ -65,11 +76,21 @@ Procedure drawAll()
   StopDrawing()
 EndProcedure
 
-OpenWindow(13,#PB_Ignore,#PB_Ignore,300,330,"drag-n-add-lines v0.7", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )
-ButtonGadget(#Add,0,300,100,30,"Add Dot")
-ButtonGadget(#Move,100,300,100,30,"Move Dot")
-ButtonGadget(#Delete,200,300,100,30,"Delete Dot")
-CanvasGadget(13,0,0,300,300)
+Procedure addFewDots(num)
+  For i = 0 To num
+    addDot(Random(#canvasWidth),Random(#canvasHeigh))
+  Next
+EndProcedure
+
+OpenWindow(13,#PB_Ignore,#PB_Ignore,#canvasWidth,#canvasHeigh+30,"drag-n-add-lines v0.8", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )
+ButtonGadget(#Add,0,#canvasWidth,60,30,"Add Dot")
+ButtonGadget(#Move,60,#canvasWidth,60,30,"Move Dot")
+ButtonGadget(#Delete,120,#canvasWidth,60,30,"Delete Dot")
+ButtonGadget(#Random,180,#canvasWidth,60,30,"Random")
+ButtonGadget(#Hide,240,#canvasWidth,60,30,"Hide Dots")
+CanvasGadget(13,0,0,#canvasWidth,#canvasHeigh)
+
+addFewDots(10)
 
 CurrentMode = #Add
 DisableGadget(#Add,1)
@@ -138,6 +159,23 @@ Repeat
           EndIf
         Next Gadget          
         CurrentMode = EventGadget 
+        
+      Case #Random
+        ClearList(all())
+        addFewDots(10)
+        
+      Case #Hide
+        R = 1
+        If GetGadgetState(#Hide)
+          Debug 1
+          SetGadgetState(#Hide,0)
+          R = 0
+        Else
+          Debug 2
+          SetGadgetState(#Hide,1)
+          R = 5
+        EndIf
+        
     EndSelect
     drawAll()
   EndIf
