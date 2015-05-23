@@ -1,6 +1,6 @@
 ; Добавил процедуру рандома точек
 ; добавил кнопку запуска рандома точек
-; добавил кнопку спрятать точки, но она пока не работает
+; добавил кнопку спрятать/показать точки. работает
 
 ;===Суть!
 ;Программа сохраняет нарисованное пользователем в виде процедурного кода PureBasic.
@@ -87,7 +87,7 @@ ButtonGadget(#Add,0,#canvasWidth,60,30,"Add Dot")
 ButtonGadget(#Move,60,#canvasWidth,60,30,"Move Dot")
 ButtonGadget(#Delete,120,#canvasWidth,60,30,"Delete Dot")
 ButtonGadget(#Random,180,#canvasWidth,60,30,"Random")
-ButtonGadget(#Hide,240,#canvasWidth,60,30,"Hide Dots")
+ButtonGadget(#Hide,240,#canvasWidth,60,30,"Hide Dots",#PB_Button_Toggle)
 CanvasGadget(13,0,0,#canvasWidth,#canvasHeigh)
 
 addFewDots(10)
@@ -165,14 +165,9 @@ Repeat
         addFewDots(10)
         
       Case #Hide
-        R = 1
         If GetGadgetState(#Hide)
-          Debug 1
-          SetGadgetState(#Hide,0)
           R = 0
         Else
-          Debug 2
-          SetGadgetState(#Hide,1)
           R = 5
         EndIf
         
