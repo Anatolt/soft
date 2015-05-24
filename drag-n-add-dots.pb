@@ -1,6 +1,6 @@
-; Добавил процедуру рандома точек
-; добавил кнопку запуска рандома точек
-; добавил кнопку спрятать/показать точки. работает
+; возвращать значение пикселя
+; показывать координаты мышки
+; заменить hide на галочку
 
 ;===Суть!
 ;Программа сохраняет нарисованное пользователем в виде процедурного кода PureBasic.
@@ -8,10 +8,9 @@
 ;Линии возможно изменять после повторной генерации.
 
 ;===План
-;завершить полигон - Enter
-; отключение точек, чтобы было видно только линию
-;Создание текста процедуры рисования линий, соответствующих полигону
-;Перетаскивать линию - ЛКМ, удалять - СКМ, добавлять - ПКМ
+; Завершить полигон - Enter
+; Создание текста процедуры рисования линий, соответствующих полигону
+; Перетаскивать линию - ЛКМ, удалять - СКМ, добавлять - ПКМ
 
 ;Пишем прогу, которая рисует линии. 
 ;нажимаем первый раз на мышь - ставится первая точка, от неё тянется линия. 
@@ -24,9 +23,10 @@
 ;заливка 
 ;изменение масштаба
 ;редактор пиксельной графики (рисование квадратами) only после изучения изменения масштаба
+;задержка рисования полигона
 
-#canvasWidth = 300
-#canvasHeigh = 300
+#canvasWidth = 400
+#canvasHeigh = 400
 
 Enumeration
   #Add
@@ -34,6 +34,7 @@ Enumeration
   #Delete
   #Hide
   #Random
+  #Clear
 EndEnumeration
 
 Structure dot
@@ -41,8 +42,7 @@ Structure dot
   y.w
 EndStructure
 
-Global NewList all.dot(), R
-R = 5
+Global NewList all.dot(), R = 5
 
 Procedure addDot(x,y)
   AddElement(all())
@@ -59,7 +59,7 @@ EndProcedure
 
 Procedure drawAll()
   StartDrawing(CanvasOutput(13))
-  Box(0,0,#canvasWidth,#canvasHeigh,$ffffffff)
+  Box(0,0,#canvasWidth,#canvasHeigh,$ffffff)
   For i = 0 To ListSize(all())-1
     SelectElement(all(),i)
     x = all()\x
@@ -82,13 +82,16 @@ Procedure addFewDots(num)
   Next
 EndProcedure
 
-OpenWindow(13,#PB_Ignore,#PB_Ignore,#canvasWidth,#canvasHeigh+30,"drag-n-add-lines v0.8", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )
-ButtonGadget(#Add,0,#canvasWidth,60,30,"Add Dot")
-ButtonGadget(#Move,60,#canvasWidth,60,30,"Move Dot")
-ButtonGadget(#Delete,120,#canvasWidth,60,30,"Delete Dot")
-ButtonGadget(#Random,180,#canvasWidth,60,30,"Random")
-ButtonGadget(#Hide,240,#canvasWidth,60,30,"Hide Dots",#PB_Button_Toggle)
-CanvasGadget(13,0,0,#canvasWidth,#canvasHeigh)
+OpenWindow(13,#PB_Ignore,#PB_Ignore,#canvasWidth,#canvasHeigh+85,"drag-n-add-lines v0.9", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )
+     ButtonGadget(#Add,0,#canvasWidth,#canvasWidth/3,30,"Add Dot")
+   ButtonGadget(#Move,#canvasWidth/3,#canvasWidth,#canvasWidth/3,30,"Move Dot")
+ButtonGadget(#Delete,#canvasWidth/3*2,#canvasWidth,#canvasWidth/3,30,"Delete Dot")
+ButtonGadget(#Random,0,#canvasWidth+30,#canvasWidth/3,30,"Random")
+  ButtonGadget(#Hide,#canvasWidth/3,#canvasWidth+30,#canvasWidth/3,30,"Hide Dots",#PB_Button_Toggle)
+ ButtonGadget(#Clear,#canvasWidth/3*2,#canvasWidth+30,#canvasWidth/3,30,"Clear")
+ CreateStatusBar(666, WindowID(13))
+AddStatusBarField(#canvasWidth)
+ CanvasGadget(13,0,0,#canvasWidth,#canvasHeigh)
 
 addFewDots(10)
 
@@ -96,11 +99,12 @@ CurrentMode = #Add
 DisableGadget(#Add,1)
 Repeat
   event = WaitWindowEvent()
-  If Event = #PB_Event_Gadget 
+  If event = #PB_Event_Gadget
     Select EventGadget() 
       Case 13
         mouseX = GetGadgetAttribute(13, #PB_Canvas_MouseX)
         mouseY = GetGadgetAttribute(13, #PB_Canvas_MouseY)
+        StatusBarText(666, 0, Str(MouseX)+","+Str(MouseY))
         
         Select EventType() 
           Case #PB_EventType_LeftButtonDown
@@ -170,6 +174,9 @@ Repeat
         Else
           R = 5
         EndIf
+        
+      Case #Clear
+        ClearList(all())
         
     EndSelect
     drawAll()
