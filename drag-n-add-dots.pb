@@ -1,40 +1,19 @@
-; возвращать значение пикселя
-; показывать координаты мышки
-; заменить hide на галочку
-
-;===Суть!
-;Программа сохраняет нарисованное пользователем в виде процедурного кода PureBasic.
-;Этот код потом можно запустить при следующем запуске программы, получив все нарисованные линии.
-;Линии возможно изменять после повторной генерации.
-
-;===План
-; Завершить полигон - Enter
-; Создание текста процедуры рисования линий, соответствующих полигону
-; Перетаскивать линию - ЛКМ, удалять - СКМ, добавлять - ПКМ
-
-;Пишем прогу, которая рисует линии. 
-;нажимаем первый раз на мышь - ставится первая точка, от неё тянется линия. 
-;нажимаем второй раз - линия прекращает следовать за мышкой и остаётся видна на экране. как в AutoCAD. 
-;сохраняется лог положения линии, чтобы потом из него можно было собрать процедурный рисунок
-
-;Далекое будущее
-;проверяем не нажал ли пользователь на саму линию (формулы вычисления линии?)
-;возможность изменять уже нарисованную линию, кликнув по самой линии
-;заливка 
-;изменение масштаба
-;редактор пиксельной графики (рисование квадратами) only после изучения изменения масштаба
-;задержка рисования полигона
-
-#canvasWidth = 400
-#canvasHeigh = 400
+#canvasWidth = 300
+#canvasHeigh = 300
 
 Enumeration
+  #wnd
+  #canva
+  #editor
   #Add
   #Move
   #Delete
   #Hide
   #Random
   #Clear
+  #Save
+  #Open
+  #Debug
 EndEnumeration
 
 Structure dot
@@ -42,7 +21,7 @@ Structure dot
   y.w
 EndStructure
 
-Global NewList all.dot(), R = 5
+Global NewList all.dot(), R = 5, color$
 
 Procedure addDot(x,y)
   AddElement(all())
@@ -58,7 +37,7 @@ Procedure popal(mouseX, mouseY, objX, objY, objW = 5, objH = 5)
 EndProcedure
 
 Procedure drawAll()
-  StartDrawing(CanvasOutput(13))
+  StartDrawing(CanvasOutput(#canva))
   Box(0,0,#canvasWidth,#canvasHeigh,$ffffff)
   For i = 0 To ListSize(all())-1
     SelectElement(all(),i)
@@ -82,29 +61,50 @@ Procedure addFewDots(num)
   Next
 EndProcedure
 
-OpenWindow(13,#PB_Ignore,#PB_Ignore,#canvasWidth,#canvasHeigh+85,"drag-n-add-lines v0.9", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )
-     ButtonGadget(#Add,0,#canvasWidth,#canvasWidth/3,30,"Add Dot")
-   ButtonGadget(#Move,#canvasWidth/3,#canvasWidth,#canvasWidth/3,30,"Move Dot")
-ButtonGadget(#Delete,#canvasWidth/3*2,#canvasWidth,#canvasWidth/3,30,"Delete Dot")
-ButtonGadget(#Random,0,#canvasWidth+30,#canvasWidth/3,30,"Random")
-  ButtonGadget(#Hide,#canvasWidth/3,#canvasWidth+30,#canvasWidth/3,30,"Hide Dots",#PB_Button_Toggle)
- ButtonGadget(#Clear,#canvasWidth/3*2,#canvasWidth+30,#canvasWidth/3,30,"Clear")
- CreateStatusBar(666, WindowID(13))
+Procedure dots2txt()
+  ClearGadgetItems(#editor)
+  ForEach all()
+    AddGadgetItem(#editor,1,Str(all()\x)+","+Str(all()\y))
+  Next
+EndProcedure
+
+
+OpenWindow(#wnd,#PB_Ignore,#PB_Ignore,#canvasWidth+100,#canvasHeigh+90+25,"drag-n-add-lines v0.10", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )
+
+ButtonGadget(#Add,   0,               #canvasHeigh,#canvasWidth/3,30,"Add Dot")
+ButtonGadget(#Move,  #canvasWidth/3,  #canvasHeigh,#canvasWidth/3,30,"Move Dot")
+ButtonGadget(#Delete,#canvasWidth/3*2,#canvasHeigh,#canvasWidth/3,30,"Delete Dot")
+
+ButtonGadget(#Random,0,              #canvasHeigh+30,#canvasWidth/3,30,"Random")
+ButtonGadget(#Hide, #canvasWidth/3,  #canvasHeigh+30,#canvasWidth/3,30,"Hide Dots",#PB_Button_Toggle)
+ButtonGadget(#Clear,#canvasWidth/3*2,#canvasHeigh+30,#canvasWidth/3,30,"Clear")
+
+ButtonGadget(#Save, 0,               #canvasHeigh+60,#canvasWidth/3,30,"Save")
+ButtonGadget(#Open, #canvasWidth/3,  #canvasHeigh+60,#canvasWidth/3,30,"Open",#PB_Button_Toggle)
+ButtonGadget(#Debug,#canvasWidth/3*2,#canvasHeigh+60,#canvasWidth/3,30,"Debug")  
+
+CreateStatusBar(666, WindowID(#wnd))
 AddStatusBarField(#canvasWidth)
- CanvasGadget(13,0,0,#canvasWidth,#canvasHeigh)
+CanvasGadget(#canva,0,0,#canvasWidth,#canvasHeigh)
 
-addFewDots(10)
+EditorGadget(#editor,#canvasWidth,0,100,#canvasHeigh)
 
-CurrentMode = #Add
-DisableGadget(#Add,1)
+addFewDots(13)
+
+CurrentMode = #Move
+DisableGadget(#Move,1)
+
 Repeat
   event = WaitWindowEvent()
   If event = #PB_Event_Gadget
     Select EventGadget() 
-      Case 13
-        mouseX = GetGadgetAttribute(13, #PB_Canvas_MouseX)
-        mouseY = GetGadgetAttribute(13, #PB_Canvas_MouseY)
-        StatusBarText(666, 0, Str(MouseX)+","+Str(MouseY))
+      Case #canva
+        mouseX = GetGadgetAttribute(#canva, #PB_Canvas_MouseX)
+        mouseY = GetGadgetAttribute(#canva, #PB_Canvas_MouseY)
+        ;         StartDrawing(CanvasOutput(#canva))
+        ;         color$ = ", color:"+Str(Point(MouseX,MouseY))
+        ;         StopDrawing()
+        StatusBarText(666, 0, Str(MouseX)+","+Str(MouseY)+color$)
         
         Select EventType() 
           Case #PB_EventType_LeftButtonDown
@@ -142,14 +142,14 @@ Repeat
               SelectElement(all(),selectedObject)
               all()\x = mouseX - offsetX
               all()\y = mouseY - offsetY
-;               drawAll()
+              ;               drawAll()
             EndIf
             
           Case #PB_EventType_LeftButtonUp
             If buttonPressed
               buttonPressed = #False
               selectedObject = -1
-;               drawAll()
+              ;               drawAll()
             EndIf
         EndSelect
         
@@ -166,7 +166,7 @@ Repeat
         
       Case #Random
         ClearList(all())
-        addFewDots(10)
+        addFewDots(13)
         
       Case #Hide
         If GetGadgetState(#Hide)
@@ -178,7 +178,91 @@ Repeat
       Case #Clear
         ClearList(all())
         
+      Case #Debug
+        dots2txt()
+        
+      Case #Open
+        File$ = OpenFileRequester("Load Text...", "", "TXT Files|*.txt|All Files|*.*", 0)
+        If File$
+          Debug "file opened ok"
+          If ReadFile(file,File$)
+            Debug "read file ok"
+            ClearGadgetItems(#editor)
+            ClearList(all())
+            While Eof(i) = 0
+              Debug "entering while loop"
+              txt$=ReadString(i)
+              AddGadgetItem(#editor,-1,txt$)
+              ;OpenPreferences
+;               For i = 1 To Len(txt$)
+;                 Debug "Enter loop for letters"
+;                 letter$ = Mid(txt$,i,1)
+;                 Debug "letter$="+letter$
+;                 While Not letter$ = ","
+;                   tempX$ + letter$
+; ;                   Debug "tempX$="+tempX$
+;                 Wend
+;                 tempY$ + letter$
+; ;                 Debug "tempY$="+tempY$
+;               Next
+;               Debug "Leave For loop for letters"
+;               x = Val(tempX$)
+;               y = Val(tempY$)
+;               addDot(x,y)
+;               tempX$ = ""
+;               tempY$ = ""
+            Wend
+                          Debug "Leave while EOF"
+            CloseFile(file)
+          Else
+            MessageRequester("Ooops", "Cannot load file: " + File$)
+          EndIf
+        EndIf
+        
+      Case #Save
+        dots2txt()
+        File$ = SaveFileRequester("Save Text...", File$, "TXT Files|*.txt|All Files|*.*", 0)
+        If File$ And (FileSize(File$) = -1)
+          If GetGadgetItemText(#editor,0) And CreateFile(file,File$)
+            counter = CountGadgetItems(#editor) - 1
+            For position = 0 To counter 
+              WriteStringN(file,GetGadgetItemText(#editor,position))
+            Next
+            CloseFile(file)
+          Else
+            MessageRequester("Ой","Почему-то не могу создать файл")
+          EndIf       
+        EndIf
+        
     EndSelect
     drawAll()
   EndIf
 Until event = #PB_Event_CloseWindow
+
+;===Суть!
+;Программа сохраняет нарисованное пользователем в виде процедурного кода PureBasic.
+;Этот код потом можно запустить при следующем запуске программы, получив все нарисованные линии.
+;Линии возможно изменять после повторной генерации.
+
+;===План
+; Завершить полигон - Enter
+; Создание текста процедуры рисования линий, соответствующих полигону
+; Перетаскивать линию - ЛКМ, удалять - СКМ, добавлять - ПКМ
+
+;Пишем прогу, которая рисует линии. 
+;нажимаем первый раз на мышь - ставится первая точка, от неё тянется линия. 
+;нажимаем второй раз - линия прекращает следовать за мышкой и остаётся видна на экране. как в AutoCAD. 
+;сохраняется лог положения линии, чтобы потом из него можно было собрать процедурный рисунок
+
+;Далекое будущее
+;проверяем не нажал ли пользователь на саму линию (формулы вычисления линии?)
+;возможность изменять уже нарисованную линию, кликнув по самой линии
+;заливка 
+;изменение масштаба
+;редактор пиксельной графики (рисование квадратами) only после изучения изменения масштаба
+;задержка рисования полигона
+
+
+; возвращать значение пикселя
+; показывать координаты мышки
+; заменить hide на галочку
