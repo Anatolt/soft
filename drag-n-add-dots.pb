@@ -1,6 +1,9 @@
 #canvasWidth = 300
 #canvasHeigh = 300
-
+#white = 16777215
+;Debug RGB(255,255,255)
+#black = 0
+;Debug RGB(0,0,0)
 Enumeration
   #wnd
   #canva
@@ -13,7 +16,8 @@ Enumeration
   #Clear
   #Save
   #Open
-  #Debug
+  #canvas2editor
+  #editor2canvas
 EndEnumeration
 
 Structure dot
@@ -38,17 +42,17 @@ EndProcedure
 
 Procedure drawAll()
   StartDrawing(CanvasOutput(#canva))
-  Box(0,0,#canvasWidth,#canvasHeigh,$ffffff)
+  Box(0,0,#canvasWidth,#canvasHeigh,#black)
   For i = 0 To ListSize(all())-1
     SelectElement(all(),i)
     x = all()\x
     y = all()\y
-    Circle(x,y,R,0)
+    Circle(x,y,R,#white)
     If i > 0
       SelectElement(all(),i-1)
       x2 = all()\x
       y2 = all()\y
-      LineXY(x,y,x2,y2,0)
+      LineXY(x,y,x2,y2,#white)
       SelectElement(all(),i)
     EndIf
   Next
@@ -61,33 +65,58 @@ Procedure addFewDots(num)
   Next
 EndProcedure
 
-Procedure dots2txt()
+Procedure canvas2editor()
   ClearGadgetItems(#editor)
   ForEach all()
-    AddGadgetItem(#editor,1,Str(all()\x)+","+Str(all()\y))
+    AddGadgetItem(#editor,-1,Str(all()\x)+","+Str(all()\y))
   Next
 EndProcedure
 
-
-OpenWindow(#wnd,#PB_Ignore,#PB_Ignore,#canvasWidth+100,#canvasHeigh+90+25,"drag-n-add-lines v0.10", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )
+Procedure editor2canvas()
+  ClearList(all())
+  For i=0 To CountGadgetItems(#editor)-1
+    string$ = GetGadgetItemText(#editor,i)
+    
+    tempX$ = StringField(string$, 1, ",")
+    Debug "tempX$="+tempX$
+    
+    tempY$  = Mid(string$,FindString(string$, ",")+1)
+    Debug "tempY$="+tempY$
+    
+    x = Val(tempX$)
+    Debug "x="+x
+    
+    y = Val(tempY$)
+    Debug "y="+y
+    
+    addDot(x,y)
+    tempX$ = ""
+    tempY$ = ""
+    
+  Next
+EndProcedure
+  
+OpenWindow(#wnd,#PB_Ignore,#PB_Ignore,#canvasWidth+100,#canvasHeigh+90+25,"drag-n-add-lines v0.11", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )
 
 ButtonGadget(#Add,   0,               #canvasHeigh,#canvasWidth/3,30,"Add Dot")
 ButtonGadget(#Move,  #canvasWidth/3,  #canvasHeigh,#canvasWidth/3,30,"Move Dot")
 ButtonGadget(#Delete,#canvasWidth/3*2,#canvasHeigh,#canvasWidth/3,30,"Delete Dot")
 
 ButtonGadget(#Random,0,              #canvasHeigh+30,#canvasWidth/3,30,"Random")
-ButtonGadget(#Hide, #canvasWidth/3,  #canvasHeigh+30,#canvasWidth/3,30,"Hide Dots",#PB_Button_Toggle)
+CheckBoxGadget(#Hide, 10+#canvasWidth/3,  #canvasHeigh+30,#canvasWidth/3-10,30,"Hide Dots")
 ButtonGadget(#Clear,#canvasWidth/3*2,#canvasHeigh+30,#canvasWidth/3,30,"Clear")
 
 ButtonGadget(#Save, 0,               #canvasHeigh+60,#canvasWidth/3,30,"Save")
 ButtonGadget(#Open, #canvasWidth/3,  #canvasHeigh+60,#canvasWidth/3,30,"Open",#PB_Button_Toggle)
-ButtonGadget(#Debug,#canvasWidth/3*2,#canvasHeigh+60,#canvasWidth/3,30,"Debug")  
+
+ButtonGadget(#canvas2editor, #canvasWidth,                 #canvasHeigh,   #canvasWidth/3,30,"Canvas → Editor")
+ButtonGadget(#editor2canvas, #canvasWidth,  #canvasHeigh+30,#canvasWidth/3,30,"Editor → Canvas");←
 
 CreateStatusBar(666, WindowID(#wnd))
 AddStatusBarField(#canvasWidth)
 CanvasGadget(#canva,0,0,#canvasWidth,#canvasHeigh)
 
-EditorGadget(#editor,#canvasWidth,0,100,#canvasHeigh)
+EditorGadget(#editor,#canvasWidth,0,#canvasWidth/3,#canvasHeigh)
 
 addFewDots(13)
 
@@ -178,10 +207,8 @@ Repeat
       Case #Clear
         ClearList(all())
         
-      Case #Debug
-        dots2txt()
-        
       Case #Open
+        file = 0
         File$ = OpenFileRequester("Load Text...", "", "TXT Files|*.txt|All Files|*.*", 0)
         If File$
           Debug "file opened ok"
@@ -189,38 +216,19 @@ Repeat
             Debug "read file ok"
             ClearGadgetItems(#editor)
             ClearList(all())
-            While Eof(i) = 0
-              Debug "entering while loop"
-              txt$=ReadString(i)
-              AddGadgetItem(#editor,-1,txt$)
-              ;OpenPreferences
-;               For i = 1 To Len(txt$)
-;                 Debug "Enter loop for letters"
-;                 letter$ = Mid(txt$,i,1)
-;                 Debug "letter$="+letter$
-;                 While Not letter$ = ","
-;                   tempX$ + letter$
-; ;                   Debug "tempX$="+tempX$
-;                 Wend
-;                 tempY$ + letter$
-; ;                 Debug "tempY$="+tempY$
-;               Next
-;               Debug "Leave For loop for letters"
-;               x = Val(tempX$)
-;               y = Val(tempY$)
-;               addDot(x,y)
-;               tempX$ = ""
-;               tempY$ = ""
+            While Eof(file) = 0
+              string$=ReadString(file)
+              AddGadgetItem(#editor,-1,string$)
             Wend
-                          Debug "Leave while EOF"
             CloseFile(file)
+            editor2canvas()
           Else
             MessageRequester("Ooops", "Cannot load file: " + File$)
           EndIf
         EndIf
         
       Case #Save
-        dots2txt()
+        canvas2editor()
         File$ = SaveFileRequester("Save Text...", File$, "TXT Files|*.txt|All Files|*.*", 0)
         If File$ And (FileSize(File$) = -1)
           If GetGadgetItemText(#editor,0) And CreateFile(file,File$)
@@ -234,6 +242,11 @@ Repeat
           EndIf       
         EndIf
         
+      Case #canvas2editor
+        canvas2editor()
+        
+      Case #editor2canvas
+        editor2canvas()
     EndSelect
     drawAll()
   EndIf
@@ -249,20 +262,17 @@ Until event = #PB_Event_CloseWindow
 ; Создание текста процедуры рисования линий, соответствующих полигону
 ; Перетаскивать линию - ЛКМ, удалять - СКМ, добавлять - ПКМ
 
-;Пишем прогу, которая рисует линии. 
-;нажимаем первый раз на мышь - ставится первая точка, от неё тянется линия. 
-;нажимаем второй раз - линия прекращает следовать за мышкой и остаётся видна на экране. как в AutoCAD. 
-;сохраняется лог положения линии, чтобы потом из него можно было собрать процедурный рисунок
-
-;Далекое будущее
+;===Далекое будущее
 ;проверяем не нажал ли пользователь на саму линию (формулы вычисления линии?)
 ;возможность изменять уже нарисованную линию, кликнув по самой линии
-;заливка 
 ;изменение масштаба
 ;редактор пиксельной графики (рисование квадратами) only после изучения изменения масштаба
 ;задержка рисования полигона
+;Ctrl+Z
+;подсветка точки и координаты в списке
 
-
-; возвращать значение пикселя
-; показывать координаты мышки
+;===Работаю над
+; заливка
+; запись не только результатов, но и действий
 ; заменить hide на галочку
+; изменение координат точки вручную
