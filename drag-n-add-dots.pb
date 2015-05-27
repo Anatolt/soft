@@ -10,12 +10,14 @@ Enumeration
   #editor
   #Add
   #Move
+  #Fill
   #Delete
   #Hide
   #Random
   #Clear
   #Save
   #Open
+;   #Debug
   #canvas2editor
   #editor2canvas
 EndEnumeration
@@ -25,7 +27,18 @@ Structure dot
   y.w
 EndStructure
 
-Global NewList all.dot(), R = 5, color$
+Structure area
+  x.w
+  y.w
+EndStructure
+
+Global NewList all.dot(), NewList fill.area(), R = 5, color$
+
+Procedure areaFill(x,y)
+  AddElement(fill())
+  fill()\x = x
+  fill()\y = y
+EndProcedure
 
 Procedure addDot(x,y)
   AddElement(all())
@@ -33,8 +46,8 @@ Procedure addDot(x,y)
   all()\y = y
 EndProcedure
 
-Procedure popal(mouseX, mouseY, objX, objY, objW = 5, objH = 5)
-  If mouseX >= objX-R And mouseX <= objX+R And mouseY >= objY-R And mouseY <= objY+R
+Procedure popal(mX, mY, objX, objY, objW = 5, objH = 5)
+  If mX >= objX-R And mX <= objX+R And mY >= objY-R And mY <= objY+R
     ProcedureReturn #True
   EndIf
   ProcedureReturn #False
@@ -44,6 +57,7 @@ Procedure drawAll()
   StartDrawing(CanvasOutput(#canva))
   Box(0,0,#canvasWidth,#canvasHeigh,#black)
   For i = 0 To ListSize(all())-1
+    Debug "Drowing dots and lines"
     SelectElement(all(),i)
     x = all()\x
     y = all()\y
@@ -55,6 +69,13 @@ Procedure drawAll()
       LineXY(x,y,x2,y2,#white)
       SelectElement(all(),i)
     EndIf
+  Next
+  For i = 0 To ListSize(fill())-1
+    Debug "Filling the arrea"
+    SelectElement(fill(),i)
+    x = fill()\x
+    y = fill()\y
+    FillArea(x,y,-1,#white)
   Next
   StopDrawing()
 EndProcedure
@@ -76,41 +97,28 @@ Procedure editor2canvas()
   ClearList(all())
   For i=0 To CountGadgetItems(#editor)-1
     string$ = GetGadgetItemText(#editor,i)
-    
-    tempX$ = StringField(string$, 1, ",")
-    Debug "tempX$="+tempX$
-    
-    tempY$  = Mid(string$,FindString(string$, ",")+1)
-    Debug "tempY$="+tempY$
-    
-    x = Val(tempX$)
-    Debug "x="+x
-    
-    y = Val(tempY$)
-    Debug "y="+y
-    
+    x = Val(StringField(string$, 1, ","))
+    y = Val(Mid(string$,FindString(string$, ",")+1))
     addDot(x,y)
-    tempX$ = ""
-    tempY$ = ""
-    
   Next
 EndProcedure
   
-OpenWindow(#wnd,#PB_Ignore,#PB_Ignore,#canvasWidth+100,#canvasHeigh+90+25,"drag-n-add-lines v0.11", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )
+OpenWindow(#wnd,#PB_Ignore,#PB_Ignore,#canvasWidth+100,#canvasHeigh+90+25,"Vector Paint v0.12", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )
 
 ButtonGadget(#Add,   0,               #canvasHeigh,#canvasWidth/3,30,"Add Dot")
 ButtonGadget(#Move,  #canvasWidth/3,  #canvasHeigh,#canvasWidth/3,30,"Move Dot")
 ButtonGadget(#Delete,#canvasWidth/3*2,#canvasHeigh,#canvasWidth/3,30,"Delete Dot")
 
-ButtonGadget(#Random,0,              #canvasHeigh+30,#canvasWidth/3,30,"Random")
+ButtonGadget(#Random, 0,                  #canvasHeigh+30,#canvasWidth/3,   30,"Random")
 CheckBoxGadget(#Hide, 10+#canvasWidth/3,  #canvasHeigh+30,#canvasWidth/3-10,30,"Hide Dots")
-ButtonGadget(#Clear,#canvasWidth/3*2,#canvasHeigh+30,#canvasWidth/3,30,"Clear")
+ButtonGadget(#Clear,  #canvasWidth/3*2,   #canvasHeigh+30,#canvasWidth/3,   30,"Clear")
 
 ButtonGadget(#Save, 0,               #canvasHeigh+60,#canvasWidth/3,30,"Save")
 ButtonGadget(#Open, #canvasWidth/3,  #canvasHeigh+60,#canvasWidth/3,30,"Open",#PB_Button_Toggle)
 
-ButtonGadget(#canvas2editor, #canvasWidth,                 #canvasHeigh,   #canvasWidth/3,30,"Canvas → Editor")
+ButtonGadget(#canvas2editor, #canvasWidth,  #canvasHeigh,   #canvasWidth/3,30,"Canvas → Editor")
 ButtonGadget(#editor2canvas, #canvasWidth,  #canvasHeigh+30,#canvasWidth/3,30,"Editor → Canvas");←
+ButtonGadget(#Fill,          #canvasWidth,  #canvasHeigh+60,#canvasWidth/3,30,"Fill");←
 
 CreateStatusBar(666, WindowID(#wnd))
 AddStatusBarField(#canvasWidth)
@@ -128,30 +136,32 @@ Repeat
   If event = #PB_Event_Gadget
     Select EventGadget() 
       Case #canva
-        mouseX = GetGadgetAttribute(#canva, #PB_Canvas_MouseX)
-        mouseY = GetGadgetAttribute(#canva, #PB_Canvas_MouseY)
+        mX = GetGadgetAttribute(#canva, #PB_Canvas_MouseX)
+        mY = GetGadgetAttribute(#canva, #PB_Canvas_MouseY)
         ;         StartDrawing(CanvasOutput(#canva))
-        ;         color$ = ", color:"+Str(Point(MouseX,MouseY))
+        ;         color$ = ", color:"+Str(Point(mX,mY))
         ;         StopDrawing()
-        StatusBarText(666, 0, Str(MouseX)+","+Str(MouseY)+color$)
+        StatusBarText(666, 0, Str(mX)+","+Str(mY)+color$)
         
         Select EventType() 
           Case #PB_EventType_LeftButtonDown
             If Not buttonPressed
               buttonPressed = #True
               If CurrentMode = #Add
-                addDot(mouseX, mouseY)
+                addDot(mX, mY)
                 SelectElement(all(),ListSize(all())-1)
-                all()\x = mouseX - R/2
-                all()\y = mouseY - R/2
+                all()\x = mX - R/2
+                all()\y = mY - R/2
                 Debug "added element ["+Str(all()\x) + "," + Str(all()\y) +"]"
+              ElseIf CurrentMode = #Fill
+                areaFill(mX,mY)
               Else
                 For i = ListSize(all())-1 To 0 Step -1
                   SelectElement(all(),i)
-                  If popal(mouseX,mouseY,all()\x,all()\y)
+                  If popal(mX,mY,all()\x,all()\y)
                     Debug "touched element [" + Str(all()\x) + "," + Str(all()\y) + ","+i+"]"
-                    offsetX = mouseX - all()\x
-                    offsetY = mouseY - all()\y
+                    offsetX = mX - all()\x
+                    offsetY = mY - all()\y
                     ;MoveElement(all(),#PB_List_Last)
                     ;selectedObject = ListSize(all())-1
                     selectedObject = i
@@ -169,20 +179,20 @@ Repeat
           Case #PB_EventType_MouseMove
             If buttonPressed And selectedObject > -1 And CurrentMode = #Move
               SelectElement(all(),selectedObject)
-              all()\x = mouseX - offsetX
-              all()\y = mouseY - offsetY
-              ;               drawAll()
+              all()\x = mX - offsetX
+              all()\y = mY - offsetY
+              ;drawAll()
             EndIf
             
           Case #PB_EventType_LeftButtonUp
             If buttonPressed
               buttonPressed = #False
               selectedObject = -1
-              ;               drawAll()
+              ;drawAll()
             EndIf
         EndSelect
         
-      Case #Add, #Delete, #Move
+      Case #Add, #Delete, #Move, #Fill
         EventGadget = EventGadget()
         For Gadget = #Add To #Delete
           If Gadget = EventGadget
@@ -206,6 +216,7 @@ Repeat
         
       Case #Clear
         ClearList(all())
+        ClearList(fill())
         
       Case #Open
         file = 0
@@ -247,6 +258,7 @@ Repeat
         
       Case #editor2canvas
         editor2canvas()
+        
     EndSelect
     drawAll()
   EndIf
@@ -272,7 +284,8 @@ Until event = #PB_Event_CloseWindow
 ;подсветка точки и координаты в списке
 
 ;===Работаю над
-; заливка
+; перезапись файла не работает!
+; переделать панель инструментов. сделать ее слева от канваса
+; сделать чтобы новые координаты точек сразу попадали в едитор и наоборот
 ; запись не только результатов, но и действий
-; заменить hide на галочку
 ; изменение координат точки вручную
