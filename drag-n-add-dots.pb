@@ -1,7 +1,5 @@
 #white = 16777215
-;Debug RGB(255,255,255)
 #black = 0
-;Debug RGB(0,0,0)
 Enumeration
   #up
   #down
@@ -19,6 +17,8 @@ Enumeration
   #Clear
   #Save
   #Open
+  #GADGET_Color
+  #IMAGE_Color
   #canvas2editor
   #editor2canvas
 EndEnumeration
@@ -26,25 +26,29 @@ EndEnumeration
 Structure dot
   x.w
   y.w
+  color.w
 EndStructure
 
 Structure area
   x.w
   y.w
+  color.w
 EndStructure
 
-Global NewList all.dot(), NewList fill.area(), R = 5, color$
+Global NewList all.dot(), NewList fill.area(), R = 5;, color$
 
 Procedure areaFill(x,y)
   AddElement(fill())
   fill()\x = x
   fill()\y = y
+  fill()\color = Random(#white-100)
 EndProcedure
 
 Procedure addDot(x,y)
   AddElement(all())
   all()\x = x
   all()\y = y
+  all()\color = Random(#white-100)
 EndProcedure
 
 Procedure popal(mX, mY, objX, objY, objW = 5, objH = 5)
@@ -61,12 +65,13 @@ Procedure drawAll()
     SelectElement(all(),i)
     x = all()\x
     y = all()\y
-    Circle(x,y,R,#white)
+    color = all()\color
+    Circle(x,y,R,color)
     If i > 0
       SelectElement(all(),i-1)
       x2 = all()\x
       y2 = all()\y
-      LineXY(x,y,x2,y2,#white)
+      LineXY(x,y,x2,y2,color)
       SelectElement(all(),i)
     EndIf
   Next
@@ -74,7 +79,7 @@ Procedure drawAll()
     SelectElement(fill(),i)
     x = fill()\x
     y = fill()\y
-    FillArea(x,y,-1,#white)
+    FillArea(x,y,-1,color)
   Next
   StopDrawing()
 EndProcedure
@@ -88,7 +93,7 @@ EndProcedure
 Procedure canvas2editor()
   ClearGadgetItems(#editor)
   ForEach all()
-    AddGadgetItem(#editor,-1,Str(all()\x)+","+Str(all()\y))
+    AddGadgetItem(#editor,-1,Str(all()\x)+","+Str(all()\y)+","+Str(all()\color))
   Next
 EndProcedure
 
@@ -97,23 +102,29 @@ Procedure editor2canvas()
   For i=0 To CountGadgetItems(#editor)-1
     string$ = GetGadgetItemText(#editor,i)
     x = Val(StringField(string$, 1, ","))
-    y = Val(Mid(string$,FindString(string$, ",")+1))
+    pos = FindString(string$, ",")+1
+    y = Val(Mid(string$,pos))
+    color = Val(Mid(string$,FindString(string$, ",", pos+1)+1))
     addDot(x,y)
   Next
 EndProcedure
-  
-OpenWindow(#wnd,#PB_Ignore,#PB_Ignore,300+100,300+90+25,"Vector Paint v0.12", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )
 
-ButtonGadget(#Add,   0,               300,300/3,30,"Add Dot")
+CurrentColor = $000000
+CreateImage(#IMAGE_Color, 35, 35, 24)
+  
+OpenWindow(#wnd,#PB_Ignore,#PB_Ignore,300+100,300+90+25,"Vector Paint v0.13", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )
+
+ButtonGadget(#Add,   0,      300,300/3,30,"Add Dot")
 ButtonGadget(#Move,  300/3,  300,300/3,30,"Move Dot")
 ButtonGadget(#Delete,300/3*2,300,300/3,30,"Delete Dot")
 
-ButtonGadget(#Random, 0,                  300+30,300/3,   30,"Random")
+ButtonGadget(#Random, 0,         300+30,300/3,   30,"Random")
 CheckBoxGadget(#Hide, 10+300/3,  300+30,300/3-10,30,"Hide Dots")
 ButtonGadget(#Clear,  300/3*2,   300+30,300/3,   30,"Clear")
 
-ButtonGadget(#Save, 0,               300+60,300/3,30,"Save")
-ButtonGadget(#Open, 300/3,  300+60,300/3,30,"Open",#PB_Button_Toggle)
+ButtonGadget(#Save,        0,      300+60,300/3,30,"Save")
+ButtonGadget(#Open,        300/3,  300+60,300/3,30,"Open")
+ButtonImageGadget(#GADGET_Color, 200,  300+60,300/3,30,ImageID(#IMAGE_Color))
 
 ButtonGadget(#canvas2editor, 300,  300,   300/3,30,"Canvas → Editor")
 ButtonGadget(#editor2canvas, 300,  300+30,300/3,30,"Editor → Canvas");←
@@ -263,7 +274,13 @@ Repeat
         
       Case #editor2canvas
         editor2canvas()
-        
+      Case #GADGET_Color
+        CurrentColor = ColorRequester(CurrentColor)
+        If StartDrawing(ImageOutput(#IMAGE_Color))
+          Box(0, 0, 100, 30, CurrentColor)
+          StopDrawing()
+          SetGadgetAttribute(#GADGET_Color, #PB_Button_Image, ImageID(#IMAGE_Color))
+        EndIf
     EndSelect
     drawAll()
   EndIf
@@ -313,8 +330,11 @@ Until event = #PB_Event_CloseWindow
 ;подсветка точки и координаты в списке
 
 ;===Работаю над
+; разделение полигонов!!11
 ; перезапись файла не работает!
-; после касания точки ее можно перемещать с клавы
+; заливалка не даёт рандомные цвета
+; колор-пикер ни на что не влияет
+; заливалка не значится в эдиторе
 ; переделать панель инструментов. сделать ее слева от канваса
 ; сделать чтобы новые координаты точек сразу попадали в едитор и наоборот
 ; запись не только результатов, но и действий
