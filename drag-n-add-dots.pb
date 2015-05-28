@@ -1,10 +1,12 @@
-#canvasWidth = 300
-#canvasHeigh = 300
 #white = 16777215
 ;Debug RGB(255,255,255)
 #black = 0
 ;Debug RGB(0,0,0)
 Enumeration
+  #up
+  #down
+  #left
+  #right
   #wnd
   #canva
   #editor
@@ -17,7 +19,6 @@ Enumeration
   #Clear
   #Save
   #Open
-;   #Debug
   #canvas2editor
   #editor2canvas
 EndEnumeration
@@ -55,9 +56,8 @@ EndProcedure
 
 Procedure drawAll()
   StartDrawing(CanvasOutput(#canva))
-  Box(0,0,#canvasWidth,#canvasHeigh,#black)
+  Box(0,0,300,300,#black)
   For i = 0 To ListSize(all())-1
-    Debug "Drowing dots and lines"
     SelectElement(all(),i)
     x = all()\x
     y = all()\y
@@ -71,7 +71,6 @@ Procedure drawAll()
     EndIf
   Next
   For i = 0 To ListSize(fill())-1
-    Debug "Filling the arrea"
     SelectElement(fill(),i)
     x = fill()\x
     y = fill()\y
@@ -82,7 +81,7 @@ EndProcedure
 
 Procedure addFewDots(num)
   For i = 0 To num
-    addDot(Random(#canvasWidth),Random(#canvasHeigh))
+    addDot(Random(300),Random(300))
   Next
 EndProcedure
 
@@ -103,33 +102,39 @@ Procedure editor2canvas()
   Next
 EndProcedure
   
-OpenWindow(#wnd,#PB_Ignore,#PB_Ignore,#canvasWidth+100,#canvasHeigh+90+25,"Vector Paint v0.12", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )
+OpenWindow(#wnd,#PB_Ignore,#PB_Ignore,300+100,300+90+25,"Vector Paint v0.12", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )
 
-ButtonGadget(#Add,   0,               #canvasHeigh,#canvasWidth/3,30,"Add Dot")
-ButtonGadget(#Move,  #canvasWidth/3,  #canvasHeigh,#canvasWidth/3,30,"Move Dot")
-ButtonGadget(#Delete,#canvasWidth/3*2,#canvasHeigh,#canvasWidth/3,30,"Delete Dot")
+ButtonGadget(#Add,   0,               300,300/3,30,"Add Dot")
+ButtonGadget(#Move,  300/3,  300,300/3,30,"Move Dot")
+ButtonGadget(#Delete,300/3*2,300,300/3,30,"Delete Dot")
 
-ButtonGadget(#Random, 0,                  #canvasHeigh+30,#canvasWidth/3,   30,"Random")
-CheckBoxGadget(#Hide, 10+#canvasWidth/3,  #canvasHeigh+30,#canvasWidth/3-10,30,"Hide Dots")
-ButtonGadget(#Clear,  #canvasWidth/3*2,   #canvasHeigh+30,#canvasWidth/3,   30,"Clear")
+ButtonGadget(#Random, 0,                  300+30,300/3,   30,"Random")
+CheckBoxGadget(#Hide, 10+300/3,  300+30,300/3-10,30,"Hide Dots")
+ButtonGadget(#Clear,  300/3*2,   300+30,300/3,   30,"Clear")
 
-ButtonGadget(#Save, 0,               #canvasHeigh+60,#canvasWidth/3,30,"Save")
-ButtonGadget(#Open, #canvasWidth/3,  #canvasHeigh+60,#canvasWidth/3,30,"Open",#PB_Button_Toggle)
+ButtonGadget(#Save, 0,               300+60,300/3,30,"Save")
+ButtonGadget(#Open, 300/3,  300+60,300/3,30,"Open",#PB_Button_Toggle)
 
-ButtonGadget(#canvas2editor, #canvasWidth,  #canvasHeigh,   #canvasWidth/3,30,"Canvas → Editor")
-ButtonGadget(#editor2canvas, #canvasWidth,  #canvasHeigh+30,#canvasWidth/3,30,"Editor → Canvas");←
-ButtonGadget(#Fill,          #canvasWidth,  #canvasHeigh+60,#canvasWidth/3,30,"Fill");←
+ButtonGadget(#canvas2editor, 300,  300,   300/3,30,"Canvas → Editor")
+ButtonGadget(#editor2canvas, 300,  300+30,300/3,30,"Editor → Canvas");←
+ButtonGadget(#Fill,          300,  300+60,300/3,30,"Fill");←
 
 CreateStatusBar(666, WindowID(#wnd))
-AddStatusBarField(#canvasWidth)
-CanvasGadget(#canva,0,0,#canvasWidth,#canvasHeigh)
+AddStatusBarField(300)
+CanvasGadget(#canva,0,0,300,300)
 
-EditorGadget(#editor,#canvasWidth,0,#canvasWidth/3,#canvasHeigh)
+EditorGadget(#editor,300,0,300/3,300)
 
+addDot(10,10)
 addFewDots(13)
 
 CurrentMode = #Move
 DisableGadget(#Move,1)
+
+AddKeyboardShortcut(#wnd,#PB_Shortcut_Up,#up)
+AddKeyboardShortcut(#wnd,#PB_Shortcut_Down,#down)
+AddKeyboardShortcut(#wnd,#PB_Shortcut_Left,#left)
+AddKeyboardShortcut(#wnd,#PB_Shortcut_Right,#right)
 
 Repeat
   event = WaitWindowEvent()
@@ -262,6 +267,30 @@ Repeat
     EndSelect
     drawAll()
   EndIf
+  If event = #PB_Event_Menu
+    Select EventMenu()
+      Case #down
+        SelectElement(all(),0)
+        all()\y + 10
+        selectedObject = -1
+        drawAll()
+      Case #up
+        SelectElement(all(),0)
+        all()\y - 10
+        selectedObject = -1
+        drawAll()
+      Case #left
+        SelectElement(all(),0)
+        all()\x - 10
+        selectedObject = -1
+        drawAll()
+      Case #right
+        SelectElement(all(),0)
+        all()\x + 10
+        selectedObject = -1
+        drawAll()
+    EndSelect
+  EndIf
 Until event = #PB_Event_CloseWindow
 
 ;===Суть!
@@ -285,6 +314,7 @@ Until event = #PB_Event_CloseWindow
 
 ;===Работаю над
 ; перезапись файла не работает!
+; после касания точки ее можно перемещать с клавы
 ; переделать панель инструментов. сделать ее слева от канваса
 ; сделать чтобы новые координаты точек сразу попадали в едитор и наоборот
 ; запись не только результатов, но и действий
