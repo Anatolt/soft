@@ -9,10 +9,12 @@ Enumeration
   #left
   #right
   #enter
+  #return
   
   #wnd
   #canva
   #editor
+  #editor_proc
   
   #Add
   #Move
@@ -79,24 +81,13 @@ Procedure drawAll()
           LineXY(x,y,x2,y2,color)
           SelectElement(all(),i) ;без этой строчки при добавлении новой точки рядом с ней появляется еще одна
         EndIf
+      Case #stop  
+        Circle(x,y,R,color)
       Case #area
         FillArea(x,y,-1,color)
     EndSelect
   Next
   StopDrawing()
-EndProcedure
-
-Procedure addFewDots(num)
-  For i = 0 To num
-    addDot(Random(300),Random(300),#start,Random(#white))
-  Next
-EndProcedure
-
-Procedure canvas2editor()
-  ClearGadgetItems(#editor)
-  ForEach all()
-    AddGadgetItem(#editor,-1,Str(all()\x)+","+Str(all()\y)+","+Str(all()\type)+","+Str(all()\color))
-  Next
 EndProcedure
 
 Procedure editor2canvas()
@@ -113,13 +104,62 @@ Procedure editor2canvas()
   Next
 EndProcedure
 
+Procedure proc(text$)
+  AddGadgetItem(#editor_proc,-1,text$)
+EndProcedure
+
+Procedure editor2proc()
+  ;здесь нужно добавить структуру all()
+  proc("StartDrawing(CanvasOutput(#canva))")
+  proc("Box(0,0,300,300,#black)")
+  proc("For i = 0 To ListSize(all())-1")
+      proc("SelectElement(all(),i)")
+      proc("type = all()\type")
+      proc("x = all()\x")
+      proc("y = all()\y")
+      proc("color = all()\color")
+      proc("Select type")
+        proc("Case #start")
+          proc("Circle(x,y,R,color)")
+          proc("If i > 0 And Not type = #stop")
+            proc("SelectElement(all(),i-1)")
+            proc("x2 = all()\x")
+            proc("y2 = all()\y")
+            proc("LineXY(x,y,x2,y2,color)")
+            proc("SelectElement(all(),i)")
+          proc("EndIf")
+        proc("Case #stop")
+          proc("Circle(x,y,R,color)")
+        proc("Case #area")
+          proc("FillArea(x,y,-1,color)")
+      proc("EndSelect")
+    proc("Next")
+    proc("StopDrawing()")
+    ;здесь нужно дописать добавление всех точек из editor в структуру all
+EndProcedure
+
+Procedure canvas2editor()
+  ClearGadgetItems(#editor)
+  ForEach all()
+    AddGadgetItem(#editor,-1,Str(all()\x)+","+Str(all()\y)+","+Str(all()\type)+","+Str(all()\color))
+  Next
+  editor2proc()
+EndProcedure
+
+Procedure addFewDots(num)
+  For i = 0 To num
+    addDot(Random(300),Random(300),#start,Random(#white))
+  Next
+  canvas2editor()
+EndProcedure
+
 CurrentColor = Red(255)
 CreateImage(#IMAGE_Color, 35, 35, 24)
 StartDrawing(ImageOutput(#IMAGE_Color))
 Box(0,0,100,30,CurrentColor)
 StopDrawing()
 
-OpenWindow(#wnd,#PB_Ignore,#PB_Ignore,300+100,300+120+25,"Vector Paint v0.14", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )
+OpenWindow(#wnd,#PB_Ignore,#PB_Ignore,700,300+120+25,"Vector Paint v0.14", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )
 
 ButtonGadget(#Add,   0,      300,300/3,30,"Add Line")
 ButtonGadget(#Move,  300/3,  300,300/3,30,"Move Dot")
@@ -143,7 +183,8 @@ CreateStatusBar(666, WindowID(#wnd))
 AddStatusBarField(300)
 CanvasGadget(#canva,0,0,300,300)
 
-EditorGadget(#editor,300,0,300/3,300)
+EditorGadget(#editor,     300,0,120,300)
+EditorGadget(#editor_proc,420,0,200,300)
 
 addFewDots(13)
 
@@ -216,6 +257,7 @@ Repeat
               selectedObject = -1
               ;drawAll()
             EndIf
+            canvas2editor()
         EndSelect
         
       Case #Add, #Delete, #Move, #Fill
@@ -319,31 +361,36 @@ Repeat
         all()\x + 10
         selectedObject = -1
         drawAll()
+      Case #enter
+        SelectElement(all(),ListSize(all())-1)
+        all()\type = #stop
+        drawAll()
     EndSelect
   EndIf
 Until event = #PB_Event_CloseWindow
 
 ;===Суть!
+;Результат работы программы - код, которым можно вставить в другую программу на PB. 
 ;Программа сохраняет нарисованное пользователем в виде процедурного кода PureBasic.
 ;Этот код потом можно запустить при следующем запуске программы, получив все нарисованные линии.
 ;Линии возможно изменять после повторной генерации.
 
-;===План
-; Завершить полигон - Enter
-; Создание текста процедуры рисования линий, соответствующих полигону
-; Перетаскивать линию - ЛКМ, удалять - СКМ, добавлять - ПКМ
-
 ;===Далекое будущее
+;сохранять при выходе без спроса
+;переделать панель инструментов. сделать ее слева от канваса
 ;проверяем не нажал ли пользователь на саму линию (формулы вычисления линии?)
 ;возможность изменять уже нарисованную линию, кликнув по самой линии
 ;изменение масштаба
 ;редактор пиксельной графики (рисование квадратами) only после изучения изменения масштаба
+;сделать чтобы новые координаты точек сразу попадали в едитор и наоборот
 ;задержка рисования полигона
 ;Ctrl+Z
 ;подсветка точки и координаты в списке
 
 ;===Работаю над
+; Создание текста процедуры рисования линий, соответствующих полигону
+; Перетаскивать линию - ЛКМ, удалять - СКМ, добавлять - ПКМ
 ; перезапись файла не работает!
-; переделать панель инструментов. сделать ее слева от канваса
-; сделать чтобы новые координаты точек сразу попадали в едитор и наоборот
-; запись не только результатов, но и действий
+; результат работы программы - код, которым можно вставить в другую программу на PB. 
+; нужнен интерфейс для добавления активных зон, который будут кнопками в другом интерфейсе
+; использовать завершение линии по Enter только если курсор на канве
