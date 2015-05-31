@@ -1,8 +1,8 @@
+#canva = 13
 #start = 1
 #stop = 2
 #area = 3
 #white = 16777215
-#black = 0
 Enumeration
   #up
   #down
@@ -12,7 +12,6 @@ Enumeration
   #return
   
   #wnd
-  #canva
   #editor
   #editor_proc
   
@@ -39,13 +38,7 @@ Structure dot
   color.l
 EndStructure
 
-Structure area
-  x.w
-  y.w
-  color.l
-EndStructure
-
-Global NewList all.dot(), NewList fill.area(), R = 5;, color$
+Global NewList all.dot(), R = 5;, color$
 
 Procedure addDot(x,y,type=#start,color=#white)
   AddElement(all())
@@ -62,9 +55,9 @@ Procedure popal(mX, mY, objX, objY, objW = 5, objH = 5)
   ProcedureReturn #False
 EndProcedure
 
-Procedure drawAll()
+Macro macroDrawAll
   StartDrawing(CanvasOutput(#canva))
-  Box(0,0,300,300,#black)
+  Box(0,0,300,300,0)
   For i = 0 To ListSize(all())-1
     SelectElement(all(),i)
     type = all()\type
@@ -88,6 +81,10 @@ Procedure drawAll()
     EndSelect
   Next
   StopDrawing()
+EndMacro
+
+Procedure drawAll()
+  macroDrawAll
 EndProcedure
 
 Procedure editor2canvas()
@@ -108,12 +105,28 @@ Procedure proc(text$)
   AddGadgetItem(#editor_proc,-1,text$)
 EndProcedure
 
-Procedure editor2proc()
+Procedure canvas2editor()
+  ClearGadgetItems(#editor_proc)
+  ;proc(macroDrawAll) - так к сожалению не работает
+  ;#CRLF$ - символ переноса строки
   ;здесь нужно добавить структуру all()
+proc("#canva = 13")
+proc("#start = 1")
+proc("#stop = 2")
+proc("#area = 3")
+proc("#white = 16777215")
+  proc("Structure dot")
+    proc("type.b")
+    proc("x.w")
+    proc("y.w")
+    proc("color.l")
+    proc("EndStructure")
+    proc("Global NewList all.dot()")
+    proc("Procedure drawAll()")
   proc("StartDrawing(CanvasOutput(#canva))")
-  proc("Box(0,0,300,300,#black)")
+  proc("Box(0,0,300,300,0)")
   proc("For i = 0 To ListSize(all())-1")
-      proc("SelectElement(all(),i)")
+  proc("SelectElement(all(),i)")
       proc("type = all()\type")
       proc("x = all()\x")
       proc("y = all()\y")
@@ -135,15 +148,28 @@ Procedure editor2proc()
       proc("EndSelect")
     proc("Next")
     proc("StopDrawing()")
-    ;здесь нужно дописать добавление всех точек из editor в структуру all
-EndProcedure
+    proc("EndProcedure")
+    proc("Procedure addDot(x,y,type=#start,color=#white)")
+  proc("AddElement(all())")
+  proc("all()\type = type")
+  proc("all()\x = x")
+  proc("all()\y = y")
+  proc("all()\color = color")
+  proc("EndProcedure")
+  ;здесь нужно дописать добавление всех точек из editor в структуру all
 
-Procedure canvas2editor()
   ClearGadgetItems(#editor)
   ForEach all()
-    AddGadgetItem(#editor,-1,Str(all()\x)+","+Str(all()\y)+","+Str(all()\type)+","+Str(all()\color))
+    txt$ = Str(all()\x)+","+Str(all()\y)+","+Str(all()\type)+","+Str(all()\color)
+    AddGadgetItem(#editor,-1,txt$)
+    AddGadgetItem(#editor_proc,-1,"addDot("+txt$+")")
   Next
-  editor2proc()
+  ;тут нужно добавить окно с канвой
+  proc("OpenWindow(0,#PB_Ignore,#PB_Ignore,300,300,"+#DQUOTE$+#DQUOTE$+", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )")
+  proc("CanvasGadget(#canva,0,0,300,300)")
+  proc("drawAll()")
+  proc("Repeat")
+    proc("Until WaitWindowEvent() = #PB_Event_CloseWindow")
 EndProcedure
 
 Procedure addFewDots(num)
@@ -159,7 +185,7 @@ StartDrawing(ImageOutput(#IMAGE_Color))
 Box(0,0,100,30,CurrentColor)
 StopDrawing()
 
-OpenWindow(#wnd,#PB_Ignore,#PB_Ignore,700,300+120+25,"Vector Paint v0.14", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )
+OpenWindow(#wnd,#PB_Ignore,#PB_Ignore,700,300+120+25,"Vector Paint v0.15", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )
 
 ButtonGadget(#Add,   0,      300,300/3,30,"Add Line")
 ButtonGadget(#Move,  300/3,  300,300/3,30,"Move Dot")
@@ -284,7 +310,6 @@ Repeat
         
       Case #Clear
         ClearList(all())
-        ClearList(fill())
         
       Case #Open
         file = 0
@@ -388,9 +413,11 @@ Until event = #PB_Event_CloseWindow
 ;подсветка точки и координаты в списке
 
 ;===Работаю над
-; Создание текста процедуры рисования линий, соответствующих полигону
 ; Перетаскивать линию - ЛКМ, удалять - СКМ, добавлять - ПКМ
 ; перезапись файла не работает!
 ; результат работы программы - код, которым можно вставить в другую программу на PB. 
 ; нужнен интерфейс для добавления активных зон, который будут кнопками в другом интерфейсе
 ; использовать завершение линии по Enter только если курсор на канве
+; упростить вывод текста процедуры до линий
+; написать инструкцию по искользованию при запуске. Мастер?
+; превратить программу в квайн
