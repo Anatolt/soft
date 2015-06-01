@@ -1,4 +1,5 @@
-#canva = 13
+IncludeFile "drop-dot-form.pbf"
+
 #start = 1
 #stop = 2
 #area = 3
@@ -8,27 +9,9 @@ Enumeration
   #down
   #left
   #right
-  #enter
   #return
-  
-  #wnd
-  #editor
-  #editor_proc
-  
-  #Add
-  #Move
-  #Fill
-  #Delete
-  #Hide
-  #Random
-  #Clear
-  #Save
-  #Open
-  
-  #GADGET_Color
-  #IMAGE_Color
   #canvas2editor
-  #editor2canvas
+  #IMAGE_Color
 EndEnumeration
 
 Structure dot
@@ -102,11 +85,11 @@ Procedure editor2canvas()
 EndProcedure
 
 Procedure proc(text$)
-  AddGadgetItem(#editor_proc,-1,text$)
+  AddGadgetItem(#editor2proc,-1,text$)
 EndProcedure
 
 Procedure canvas2editor()
-  ClearGadgetItems(#editor_proc)
+  ClearGadgetItems(#editor2proc)
   ;proc(macroDrawAll) - так к сожалению не работает
   ;#CRLF$ - символ переноса строки
   ;здесь нужно добавить структуру all()
@@ -162,7 +145,7 @@ proc("#white = 16777215")
   ForEach all()
     txt$ = Str(all()\x)+","+Str(all()\y)+","+Str(all()\type)+","+Str(all()\color)
     AddGadgetItem(#editor,-1,txt$)
-    AddGadgetItem(#editor_proc,-1,"addDot("+txt$+")")
+    AddGadgetItem(#editor2proc,-1,"addDot("+txt$+")")
   Next
   ;тут нужно добавить окно с канвой
   proc("OpenWindow(0,#PB_Ignore,#PB_Ignore,300,300,"+#DQUOTE$+#DQUOTE$+", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )")
@@ -185,33 +168,7 @@ StartDrawing(ImageOutput(#IMAGE_Color))
 Box(0,0,100,30,CurrentColor)
 StopDrawing()
 
-OpenWindow(#wnd,#PB_Ignore,#PB_Ignore,700,300+120+25,"Vector Paint v0.15", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )
-
-ButtonGadget(#Add,   0,      300,300/3,30,"Add Line")
-ButtonGadget(#Move,  300/3,  300,300/3,30,"Move Dot")
-ButtonGadget(#Delete,300/3*2,300,300/3,30,"Delete Dot")
-
-ButtonGadget(#Random, 0,         300+30,300/3,   30,"Random")
-CheckBoxGadget(#Hide, 10+300/3,  300+30,300/3-10,30,"Hide Dots")
-ButtonGadget(#Clear,  300/3*2,   300+30,300/3,   30,"Clear")
-
-ButtonGadget(#Save,        0,      300+60,300/3,30,"Save")
-ButtonGadget(#Open,        300/3,  300+60,300/3,30,"Open")
-ButtonImageGadget(#GADGET_Color, 200,  300+60,300/3,30,ImageID(#IMAGE_Color))
-
-ButtonGadget(#canvas2editor, 300,  300,   300/3,30,"Canvas → Editor")
-ButtonGadget(#editor2canvas, 300,  300+30,300/3,30,"Editor → Canvas");←
-ButtonGadget(#Fill,          300,  300+60,300/3,30,"Fill")           ;←
-
-ButtonGadget(#enter, 0, 390, 100, 30, "Stop Line")
-
-CreateStatusBar(666, WindowID(#wnd))
-AddStatusBarField(300)
-CanvasGadget(#canva,0,0,300,300)
-
-EditorGadget(#editor,     300,0,120,300)
-EditorGadget(#editor_proc,420,0,200,300)
-
+Openwnd()
 addFewDots(13)
 
 CurrentMode = #Move
@@ -221,7 +178,7 @@ AddKeyboardShortcut(#wnd,#PB_Shortcut_W,#up)
 AddKeyboardShortcut(#wnd,#PB_Shortcut_S,#down)
 AddKeyboardShortcut(#wnd,#PB_Shortcut_A,#left)
 AddKeyboardShortcut(#wnd,#PB_Shortcut_D,#right)
-AddKeyboardShortcut(#wnd,#PB_Shortcut_Return,#enter)
+AddKeyboardShortcut(#wnd,#PB_Shortcut_Space,#stopLine)
 
 Repeat
   event = WaitWindowEvent()
@@ -233,7 +190,7 @@ Repeat
         ;         StartDrawing(CanvasOutput(#canva))
         ;         color$ = ", color:"+Str(Point(mX,mY))
         ;         StopDrawing()
-        StatusBarText(666, 0, Str(mX)+","+Str(mY)+color$)
+        StatusBarText(#statusbar, 0, Str(mX)+","+Str(mY)+color$)
         
         Select EventType() 
           Case #PB_EventType_LeftButtonDown
@@ -358,7 +315,7 @@ Repeat
           StopDrawing()
           SetGadgetAttribute(#GADGET_Color, #PB_Button_Image, ImageID(#IMAGE_Color))
         EndIf
-      Case #enter
+      Case #stop
         SelectElement(all(),ListSize(all())-1)
         all()\type = #stop
     EndSelect
@@ -386,7 +343,7 @@ Repeat
         all()\x + 10
         selectedObject = -1
         drawAll()
-      Case #enter
+      Case #stopLine
         SelectElement(all(),ListSize(all())-1)
         all()\type = #stop
         drawAll()
@@ -413,11 +370,10 @@ Until event = #PB_Event_CloseWindow
 ;подсветка точки и координаты в списке
 
 ;===Работаю над
+; активные прямоугольники
+; нужнен интерфейс для добавления активных зон, который будут кнопками в другом интерфейсе
 ; Перетаскивать линию - ЛКМ, удалять - СКМ, добавлять - ПКМ
 ; перезапись файла не работает!
-; результат работы программы - код, которым можно вставить в другую программу на PB. 
-; нужнен интерфейс для добавления активных зон, который будут кнопками в другом интерфейсе
 ; использовать завершение линии по Enter только если курсор на канве
 ; упростить вывод текста процедуры до линий
 ; написать инструкцию по искользованию при запуске. Мастер?
-; превратить программу в квайн
