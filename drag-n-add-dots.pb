@@ -3,6 +3,8 @@ IncludeFile "drop-dot-form.pbf"
 #start = 1
 #stop = 2
 #area = 3
+#startSquare = 4
+#endSquare = 5
 #white = 16777215
 Enumeration
   #up
@@ -21,7 +23,14 @@ Structure dot
   color.l
 EndStructure
 
-Global NewList all.dot(), R = 5;, color$
+Structure square
+  startX.w
+  startY.w
+  endX.w
+  endY.w
+EndStructure
+
+Global NewList all.dot(), NewList every.square(), R = 5
 
 Procedure addDot(x,y,type=#start,color=#white)
   AddElement(all())
@@ -61,6 +70,16 @@ Macro macroDrawAll
         Circle(x,y,R,color)
       Case #area
         FillArea(x,y,-1,color)
+        DrawingMode(#PB_2DDrawing_XOr)
+        Circle(x,y,R,color)
+        DrawingMode(#PB_2DDrawing_Default)
+      Case #endSquare
+        DrawingMode(#PB_2DDrawing_Outlined)
+        SelectElement(all(),i-1)
+          x2 = all()\x
+          y2 = all()\y
+        Box(x,y,x2-x,y2-y,color)
+        SelectElement(all(),i)
     EndSelect
   Next
   StopDrawing()
@@ -139,15 +158,12 @@ proc("#white = 16777215")
   proc("all()\y = y")
   proc("all()\color = color")
   proc("EndProcedure")
-  ;здесь нужно дописать добавление всех точек из editor в структуру all
-
   ClearGadgetItems(#editor)
   ForEach all()
     txt$ = Str(all()\x)+","+Str(all()\y)+","+Str(all()\type)+","+Str(all()\color)
     AddGadgetItem(#editor,-1,txt$)
     AddGadgetItem(#editor2proc,-1,"addDot("+txt$+")")
   Next
-  ;тут нужно добавить окно с канвой
   proc("OpenWindow(0,#PB_Ignore,#PB_Ignore,300,300,"+#DQUOTE$+#DQUOTE$+", #PB_Window_SystemMenu | #PB_Window_ScreenCentered )")
   proc("CanvasGadget(#canva,0,0,300,300)")
   proc("drawAll()")
@@ -171,8 +187,8 @@ StopDrawing()
 Openwnd()
 addFewDots(13)
 
-CurrentMode = #Move
-DisableGadget(#Move,1)
+CurrentMode = #AddClickArea
+DisableGadget(#AddClickArea,1)
 
 AddKeyboardShortcut(#wnd,#PB_Shortcut_W,#up)
 AddKeyboardShortcut(#wnd,#PB_Shortcut_S,#down)
@@ -187,13 +203,11 @@ Repeat
       Case #canva
         mX = GetGadgetAttribute(#canva, #PB_Canvas_MouseX)
         mY = GetGadgetAttribute(#canva, #PB_Canvas_MouseY)
-        ;         StartDrawing(CanvasOutput(#canva))
-        ;         color$ = ", color:"+Str(Point(mX,mY))
-        ;         StopDrawing()
         StatusBarText(0, 0, Str(mX)+","+Str(mY)+color$)
-        
         Select EventType() 
           Case #PB_EventType_LeftButtonDown
+            StartX = mX
+            StartY = mY
             If Not buttonPressed
               buttonPressed = #True
               If CurrentMode = #Add
@@ -205,10 +219,13 @@ Repeat
               ElseIf CurrentMode = #Fill
                 addDot(mX,mY,#area,CurrentColor) ;areaFill
               ElseIf CurrentMode = #AddClickArea
-                StartDrawing(CanvasOutput(#canva))
-                DrawingMode(#PB_2DDrawing_Outlined)
-                Box(mX, mY, x-mX, y-mY, CurrentColor)
-                StopDrawing()
+                Debug "#AddClickArea"
+                SelectElement(all(),ListSize(all())-1)
+                If all()\type = #startSquare
+                  addDot(mX,mY,#endSquare,CurrentColor)
+                Else
+                  addDot(mX,mY,#endSquare,CurrentColor)
+                EndIf
               Else
                 For i = ListSize(all())-1 To 0 Step -1
                   SelectElement(all(),i)
@@ -216,8 +233,6 @@ Repeat
                     Debug "touched element [" + Str(all()\x) + "," + Str(all()\y) + ","+i+"]"
                     offsetX = mX - all()\x
                     offsetY = mY - all()\y
-                    ;MoveElement(all(),#PB_List_Last)
-                    ;selectedObject = ListSize(all())-1
                     selectedObject = i
                     If CurrentMode = #Delete
                       Debug "deleted element [" + Str(all()\x) + "," + Str(all()\y) + ","+i+"]"
@@ -363,7 +378,7 @@ Until event = #PB_Event_CloseWindow
 
 ;===Далекое будущее
 ;сохранять при выходе без спроса
-;переделать панель инструментов. сделать ее слева от канваса
+;подгружать на фон JPG\PNG картинку
 ;проверяем не нажал ли пользователь на саму линию (формулы вычисления линии?)
 ;возможность изменять уже нарисованную линию, кликнув по самой линии
 ;изменение масштаба
@@ -374,6 +389,7 @@ Until event = #PB_Event_CloseWindow
 ;подсветка точки и координаты в списке
 
 ;===Работаю над
+; переделать процедуру рисования как в примере Pain
 ; активные прямоугольники
 ; нужнен интерфейс для добавления активных зон, который будут кнопками в другом интерфейсе
 ; Перетаскивать линию - ЛКМ, удалять - СКМ, добавлять - ПКМ
@@ -382,3 +398,6 @@ Until event = #PB_Event_CloseWindow
 ; упростить вывод текста процедуры до линий
 ; написать инструкцию по искользованию при запуске. Мастер?
 ; изначально не отображается цвет гаджета выбора цвета
+
+;===Сделал
+; отключаемые точки в центре заливаемых областей. теперь из удобно перемешать и удалять
