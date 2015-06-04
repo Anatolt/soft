@@ -4,8 +4,6 @@
 ; Event procedures needs to be put in another source file.
 ;
 
-Global Button_0
-
 Enumeration FormWindow
   #wnd
 EndEnumeration
@@ -27,11 +25,12 @@ Enumeration FormGadget
   #canva
   #editor
   #editor2proc
+  #Squares2btns
 EndEnumeration
 
 
 Procedure Openwnd(x = #PB_Ignore, y = #PB_Ignore, width = 730, height = 360)
-  OpenWindow(#wnd, x, y, width, height, "Vector Paint v0.19", #PB_Window_SystemMenu | #PB_Window_ScreenCentered)
+  OpenWindow(#wnd, x, y, width, height, name$, #PB_Window_SystemMenu | #PB_Window_ScreenCentered)
   CreateStatusBar(0, WindowID(#wnd))
   AddStatusBarField(300)
   ButtonGadget(#Add, 0, 0, 100, 30, "Add Line")
@@ -50,7 +49,7 @@ Procedure Openwnd(x = #PB_Ignore, y = #PB_Ignore, width = 730, height = 360)
   CanvasGadget(#canva, 100, 0, 300, 300)
   EditorGadget(#editor, 400, 0, 120, 300)
   EditorGadget(#editor2proc, 520, 0, 210, 337)
-  Button_0 = ButtonGadget(#PB_Any, 190, 450, 100, 25, "")
+  CheckBoxGadget(#Squares2btns, 10, 300, 90, 30, "Squares 2 Btns")
 EndProcedure
 
 Procedure wnd_Events(event)
@@ -68,3 +67,4 @@ Procedure wnd_Events(event)
   EndSelect
   ProcedureReturn #True
 EndProcedure
+
