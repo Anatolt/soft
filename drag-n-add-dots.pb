@@ -1,3 +1,11 @@
+Structure dot
+  type.b
+  x.w
+  y.w
+  color.l
+EndStructure
+
+Global NewList all.dot(), R = 5, name$ = "Vector Paint v0.20"
 IncludeFile "drop-dot-form.pbf"
 
 #start = 1
@@ -14,23 +22,8 @@ Enumeration
   #return
   #canvas2editor
   #IMAGE_Color
+  #DebugBtns
 EndEnumeration
-
-Structure dot
-  type.b
-  x.w
-  y.w
-  color.l
-EndStructure
-
-Structure square
-  startX.w
-  startY.w
-  endX.w
-  endY.w
-EndStructure
-
-Global NewList all.dot(), NewList every.square(), R = 5
 
 Procedure addDot(x,y,type=#start,color=#white)
   AddElement(all())
@@ -73,12 +66,16 @@ Macro macroDrawAll
         DrawingMode(#PB_2DDrawing_XOr)
         Circle(x,y,R,color)
         DrawingMode(#PB_2DDrawing_Default)
+      Case #startSquare
+        Circle(x,y,R,color)
       Case #endSquare
         DrawingMode(#PB_2DDrawing_Outlined)
         SelectElement(all(),i-1)
-          x2 = all()\x
-          y2 = all()\y
+        x2 = all()\x
+        y2 = all()\y
         Box(x,y,x2-x,y2-y,color)
+        DrawingMode(#PB_2DDrawing_Default)
+        Circle(x,y,R,color)
         SelectElement(all(),i)
     EndSelect
   Next
@@ -116,6 +113,8 @@ proc("#canva = 13")
 proc("#start = 1")
 proc("#stop = 2")
 proc("#area = 3")
+proc("#startSquare = 4")
+proc("#endSquare = 5")
 proc("#white = 16777215")
   proc("Structure dot")
     proc("type.b")
@@ -125,32 +124,46 @@ proc("#white = 16777215")
     proc("EndStructure")
     proc("Global NewList all.dot()")
     proc("Procedure drawAll()")
-  proc("StartDrawing(CanvasOutput(#canva))")
-  proc("Box(0,0,300,300,0)")
-  proc("For i = 0 To ListSize(all())-1")
-  proc("SelectElement(all(),i)")
-      proc("type = all()\type")
-      proc("x = all()\x")
-      proc("y = all()\y")
-      proc("color = all()\color")
-      proc("Select type")
-        proc("Case #start")
-          proc("Circle(x,y,R,color)")
-          proc("If i > 0 And Not type = #stop")
-            proc("SelectElement(all(),i-1)")
-            proc("x2 = all()\x")
-            proc("y2 = all()\y")
-            proc("LineXY(x,y,x2,y2,color)")
-            proc("SelectElement(all(),i)")
-          proc("EndIf")
-        proc("Case #stop")
-          proc("Circle(x,y,R,color)")
-        proc("Case #area")
-          proc("FillArea(x,y,-1,color)")
-      proc("EndSelect")
-    proc("Next")
-    proc("StopDrawing()")
-    proc("EndProcedure")
+proc("StartDrawing(CanvasOutput(#canva))")
+proc("Box(0,0,300,300,0)")
+proc("For i = 0 To ListSize(all())-1")
+proc("SelectElement(all(),i)")
+proc("type = all()\type")
+proc("x = all()\x")
+proc("y = all()\y")
+proc("color = all()\color")
+proc("Select type")
+proc("Case #start")
+proc("Circle(x,y,R,color)")
+proc("If i > 0 And Not type = #stop")
+proc("SelectElement(all(),i-1)")
+proc("x2 = all()\x")
+proc("y2 = all()\y")
+proc("LineXY(x,y,x2,y2,color)")
+proc("SelectElement(all(),i)")
+proc("EndIf")
+proc("Case #stop  ")
+proc("Circle(x,y,R,color)")
+proc("Case #area")
+proc("FillArea(x,y,-1,color)")
+proc("DrawingMode(#PB_2DDrawing_XOr)")
+proc("Circle(x,y,R,color)")
+proc("DrawingMode(#PB_2DDrawing_Default)")
+proc("Case #startSquare")
+proc("Circle(x,y,R,color)")
+proc("Case #endSquare")
+proc("DrawingMode(#PB_2DDrawing_Outlined)")
+proc("SelectElement(all(),i-1)")
+proc("x2 = all()\x")
+proc("y2 = all()\y")
+proc("Box(x,y,x2-x,y2-y,color)")
+proc("DrawingMode(#PB_2DDrawing_Default)")
+proc("Circle(x,y,R,color)")
+proc("SelectElement(all(),i)")
+proc("EndSelect")
+proc("Next")
+proc("StopDrawing()")
+proc("EndProcedure")
     proc("Procedure addDot(x,y,type=#start,color=#white)")
   proc("AddElement(all())")
   proc("all()\type = type")
@@ -219,13 +232,37 @@ Repeat
               ElseIf CurrentMode = #Fill
                 addDot(mX,mY,#area,CurrentColor) ;areaFill
               ElseIf CurrentMode = #AddClickArea
-                Debug "#AddClickArea"
-                SelectElement(all(),ListSize(all())-1)
-                If all()\type = #startSquare
+                If trigger
                   addDot(mX,mY,#endSquare,CurrentColor)
+                  trigger = 0
                 Else
-                  addDot(mX,mY,#endSquare,CurrentColor)
+                  addDot(mX,mY,#startSquare,CurrentColor)
+                  trigger = 1
                 EndIf
+                
+              ElseIf CurrentMode = #DebugBtns
+                For i = ListSize(all())-1 To 0 Step -1
+                  SelectElement(all(),i)
+                  x = all()\x
+                  y = all()\y
+                  If all()\type = #endSquare 
+                    For j = ListIndex(all()) To 0 Step -1
+                      SelectElement(all(),j)
+                      If all()\type = #endSquare 
+                        x2 = all()\x
+                        y2 = all()\y
+                      EndIf
+                    Next
+                    If popal(mX,mY,x,y,x2-x,y2-y)
+                      Debug "Попал в прямоугольник"
+                      offsetX = mX - all()\x
+                      offsetY = mY - all()\y
+                      selectedObject = i
+                      Break
+                    EndIf
+                  EndIf
+                Next
+                
               Else
                 For i = ListSize(all())-1 To 0 Step -1
                   SelectElement(all(),i)
@@ -279,9 +316,24 @@ Repeat
         
       Case #Hide
         If GetGadgetState(#Hide)
-          R = 0
+          R = 1
         Else
           R = 5
+        EndIf
+        
+      Case #Squares2btns
+        If GetGadgetState(#Squares2btns)
+          tmp = CurrentMode
+          CurrentMode = #DebugBtns
+          For Gadget = #Add To #Delete
+            DisableGadget(Gadget,1)
+          Next
+        Else
+          CurrentMode = tmp
+          tmp = 0
+          For Gadget = #Add To #Delete
+            DisableGadget(Gadget,0)
+          Next
         EndIf
         
       Case #Clear
@@ -340,6 +392,7 @@ Repeat
     EndSelect
     drawAll()
   EndIf
+  
   If event = #PB_Event_Menu
     Select EventMenu()
       Case #down
@@ -400,4 +453,5 @@ Until event = #PB_Event_CloseWindow
 ; изначально не отображается цвет гаджета выбора цвета
 
 ;===Сделал
-; отключаемые точки в центре заливаемых областей. теперь из удобно перемешать и удалять
+; прямоугольники теперь начинаются в отдельных, видимых точках
+; начал писать попадание в прямоугольник
