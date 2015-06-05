@@ -20,6 +20,7 @@ Enumeration FormGadget
   #Save
   #Open
   #GADGET_Color
+  #IMAGE_Color
   #editor2canvas
   #stopLine
   #canva
@@ -43,7 +44,7 @@ Procedure Openwnd(x = #PB_Ignore, y = #PB_Ignore, width = 730, height = 360)
   ButtonGadget(#Clear, 0, 210, 100, 30, "Clear")
   ButtonGadget(#Save, 100, 300, 100, 30, "Save")
   ButtonGadget(#Open, 200, 300, 100, 30, "Open")
-  ButtonImageGadget(#GADGET_Color, 0, 240, 100, 30, 0)
+  ButtonImageGadget(#GADGET_Color, 0, 240, 100, 30, #IMAGE_Color)
   ButtonGadget(#editor2canvas, 400, 300, 120, 30, "Editor → Canvas")
   ButtonGadget(#stopLine, 0, 30, 100, 30, "Stop Line")
   CanvasGadget(#canva, 100, 0, 300, 300)
