@@ -21,7 +21,6 @@ Enumeration
   #right
   #return
   #canvas2editor
-  #IMAGE_Color
   #DebugBtns
 EndEnumeration
 
@@ -192,13 +191,19 @@ Procedure addFewDots(num)
 EndProcedure
 
 CurrentColor = Red(255)
-CreateImage(#IMAGE_Color, 35, 35, 24)
-StartDrawing(ImageOutput(#IMAGE_Color))
-Box(0,0,100,30,CurrentColor)
-StopDrawing()
+CreateImage(#IMAGE_Color, 100, 30)
+Macro clrBtn
+If StartDrawing(ImageOutput(#IMAGE_Color))
+  Box(0, 0, 100, 30, CurrentColor)
+  StopDrawing()
+  SetGadgetAttribute(#GADGET_Color, #PB_Button_Image, ImageID(#IMAGE_Color))
+EndIf
+EndMacro
+
 
 Openwnd()
 addFewDots(13)
+clrBtn
 
 CurrentMode = #AddClickArea
 DisableGadget(#AddClickArea,1)
@@ -379,13 +384,11 @@ Repeat
         
       Case #editor2canvas
         editor2canvas()
+        
       Case #GADGET_Color
         CurrentColor = ColorRequester(CurrentColor)
-        If StartDrawing(ImageOutput(#IMAGE_Color))
-          Box(0, 0, 100, 30, CurrentColor)
-          StopDrawing()
-          SetGadgetAttribute(#GADGET_Color, #PB_Button_Image, ImageID(#IMAGE_Color))
-        EndIf
+        clrBtn
+        
       Case #stop
         SelectElement(all(),ListSize(all())-1)
         all()\type = #stop
@@ -453,5 +456,5 @@ Until event = #PB_Event_CloseWindow
 ; изначально не отображается цвет гаджета выбора цвета
 
 ;===Сделал
-; прямоугольники теперь начинаются в отдельных, видимых точках
-; начал писать попадание в прямоугольник
+; починил стартовое состояние кнопки переключение цветов
+; вынес повторящийся код в макрос
