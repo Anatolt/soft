@@ -1,11 +1,17 @@
-Structure dot
-  type.b
+Structure square
   x.w
   y.w
+  type.b
+EndStructure
+  
+Structure dot
+  x.w
+  y.w
+  type.b
   color.l
 EndStructure
 
-Global NewList all.dot(), R = 5, name$ = "Vector Paint v0.20"
+Global NewList all.dot(), NewList every.square(), R = 5, name$ = "Vector Paint v0.22"
 IncludeFile "drop-dot-form.pbf"
 
 #start = 1
@@ -14,6 +20,7 @@ IncludeFile "drop-dot-form.pbf"
 #startSquare = 4
 #endSquare = 5
 #white = 16777215
+#red = 255
 Enumeration
   #up
   #down
@@ -26,14 +33,28 @@ EndEnumeration
 
 Procedure addDot(x,y,type=#start,color=#white)
   AddElement(all())
-  all()\type = type
   all()\x = x
   all()\y = y
+  all()\type = type
   all()\color = color ;Random(#white-100)
 EndProcedure
 
-Procedure popal(mX, mY, objX, objY, objW = 5, objH = 5)
+Procedure addSquare(x,y,type)
+  AddElement(every())
+  every()\x = x
+  every()\y = y
+  every()\type = type
+EndProcedure
+
+Procedure popalDot(mX, mY, objX, objY, objW = 5, objH = 5)
   If mX >= objX-R And mX <= objX+R And mY >= objY-R And mY <= objY+R
+    ProcedureReturn #True
+  EndIf
+  ProcedureReturn #False
+EndProcedure
+
+Procedure popalSquare(mX, mY, objX, objY, objW, objH)
+  If mX >= objX And mX <= objW And mY >= objY And mY <= objH
     ProcedureReturn #True
   EndIf
   ProcedureReturn #False
@@ -65,17 +86,25 @@ Macro macroDrawAll
         DrawingMode(#PB_2DDrawing_XOr)
         Circle(x,y,R,color)
         DrawingMode(#PB_2DDrawing_Default)
+    EndSelect
+  Next
+  For i = 0 To ListSize(every())-1
+    SelectElement(every(),i)
+    type = every()\type
+    x = every()\x
+    y = every()\y
+    Select type
       Case #startSquare
-        Circle(x,y,R,color)
+        Circle(x,y,R,#red)
       Case #endSquare
         DrawingMode(#PB_2DDrawing_Outlined)
-        SelectElement(all(),i-1)
-        x2 = all()\x
-        y2 = all()\y
-        Box(x,y,x2-x,y2-y,color)
+        SelectElement(every(),i-1)
+        x2 = every()\x
+        y2 = every()\y
+        Box(x,y,x2-x,y2-y,#red)
         DrawingMode(#PB_2DDrawing_Default)
-        Circle(x,y,R,color)
-        SelectElement(all(),i)
+        Circle(x,y,R,#red)
+        SelectElement(every(),i)
     EndSelect
   Next
   StopDrawing()
@@ -200,7 +229,6 @@ If StartDrawing(ImageOutput(#IMAGE_Color))
 EndIf
 EndMacro
 
-
 Openwnd()
 addFewDots(13)
 clrBtn
@@ -236,42 +264,43 @@ Repeat
                 Debug "added element ["+Str(all()\x) + "," + Str(all()\y) +"]"
               ElseIf CurrentMode = #Fill
                 addDot(mX,mY,#area,CurrentColor) ;areaFill
+                
               ElseIf CurrentMode = #AddClickArea
                 If trigger
-                  addDot(mX,mY,#endSquare,CurrentColor)
+                  addSquare(mX,mY,#endSquare)
                   trigger = 0
                 Else
-                  addDot(mX,mY,#startSquare,CurrentColor)
+                  addSquare(mX,mY,#startSquare)
                   trigger = 1
                 EndIf
                 
               ElseIf CurrentMode = #DebugBtns
-                For i = ListSize(all())-1 To 0 Step -1
-                  SelectElement(all(),i)
-                  x = all()\x
-                  y = all()\y
-                  If all()\type = #endSquare 
-                    For j = ListIndex(all()) To 0 Step -1
-                      SelectElement(all(),j)
-                      If all()\type = #endSquare 
-                        x2 = all()\x
-                        y2 = all()\y
-                      EndIf
-                    Next
-                    If popal(mX,mY,x,y,x2-x,y2-y)
-                      Debug "Попал в прямоугольник"
-                      offsetX = mX - all()\x
-                      offsetY = mY - all()\y
-                      selectedObject = i
-                      Break
-                    EndIf
+                For i = ListSize(every())-1 To 0 Step -1
+                  SelectElement(every(),i)
+                  x = every()\x
+                  y = every()\y
+                  Debug "x="+Str(x) +",y="+ Str(y)
+                  If i>0
+                    SelectElement(every(),i-1)
+                    x2 = every()\x
+                    y2 = every()\y
+                    Debug "x2="+Str(x2) +",y2="+ Str(y2)
+                    SelectElement(every(),i)
+                  EndIf
+                  Debug "mX="+Str(mX)
+                  If popalSquare(mX,mY,x,y,x2-x,y2-y)
+                    Debug "Попал в прямоугольник"
+                    offsetX = mX - x
+                    offsetY = mY - y
+                    selectedObject = i
+                    Break
                   EndIf
                 Next
                 
-              Else
+              Else;If CurrentMode = #Move Or CurrentMode = #Delete 
                 For i = ListSize(all())-1 To 0 Step -1
                   SelectElement(all(),i)
-                  If popal(mX,mY,all()\x,all()\y)
+                  If popalDot(mX,mY,all()\x,all()\y)
                     Debug "touched element [" + Str(all()\x) + "," + Str(all()\y) + ","+i+"]"
                     offsetX = mX - all()\x
                     offsetY = mY - all()\y
@@ -321,7 +350,7 @@ Repeat
         
       Case #Hide
         If GetGadgetState(#Hide)
-          R = 1
+          R = 0
         Else
           R = 5
         EndIf
@@ -378,10 +407,7 @@ Repeat
             MessageRequester("Ой","Почему-то не могу создать файл")
           EndIf       
         EndIf
-        
-      Case #canvas2editor
-        canvas2editor()
-        
+                
       Case #editor2canvas
         editor2canvas()
         
@@ -433,6 +459,7 @@ Until event = #PB_Event_CloseWindow
 ;Линии возможно изменять после повторной генерации.
 
 ;===Далекое будущее
+;возможность добавлять текст
 ;сохранять при выходе без спроса
 ;подгружать на фон JPG\PNG картинку
 ;проверяем не нажал ли пользователь на саму линию (формулы вычисления линии?)
@@ -456,5 +483,7 @@ Until event = #PB_Event_CloseWindow
 ; изначально не отображается цвет гаджета выбора цвета
 
 ;===Сделал
-; починил стартовое состояние кнопки переключение цветов
-; вынес повторящийся код в макрос
+; Вынес прямоугольники в отдельную структуру
+; Создание прямоугольников - в отдельную процедуру
+; Застрял на проверке попадания в прямоугольник
+; И вообще я пьян я устал и у меня украли велосипед, как можно писать код в таком состоянии?
