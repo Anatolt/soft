@@ -11,7 +11,7 @@ Structure dot
   color.l
 EndStructure
 
-Global NewList all.dot(), NewList every.square(), R = 5, name$ = "Vector Paint v0.22"
+Global NewList all.dot(), NewList every.square(), R = 5, name$ = "Vector Paint v0.23"
 IncludeFile "drop-dot-form.pbf"
 
 #start = 1
@@ -29,6 +29,7 @@ Enumeration
   #return
   #canvas2editor
   #DebugBtns
+  #IMAGE_Color
 EndEnumeration
 
 Procedure addDot(x,y,type=#start,color=#white)
@@ -275,7 +276,7 @@ Repeat
                 EndIf
                 
               ElseIf CurrentMode = #DebugBtns
-                For i = ListSize(every())-1 To 0 Step -1
+                For i = ListSize(every())-1 To 0 Step -2
                   SelectElement(every(),i)
                   x = every()\x
                   y = every()\y
@@ -287,8 +288,8 @@ Repeat
                     Debug "x2="+Str(x2) +",y2="+ Str(y2)
                     SelectElement(every(),i)
                   EndIf
-                  Debug "mX="+Str(mX)
-                  If popalSquare(mX,mY,x,y,x2-x,y2-y)
+                  Debug "mX="+Str(mX)+",mY="+Str(mY)
+                  If popalSquare(mX,mY,x,y,x-x2,y-y2)
                     Debug "Попал в прямоугольник"
                     offsetX = mX - x
                     offsetY = mY - y
@@ -372,6 +373,8 @@ Repeat
         
       Case #Clear
         ClearList(all())
+        ClearList(every())
+        ClearGadgetItems(#editor)
         
       Case #Open
         file = 0
@@ -396,7 +399,7 @@ Repeat
       Case #Save
         canvas2editor()
         File$ = SaveFileRequester("Save Text...", File$, "TXT Files|*.txt|All Files|*.*", 0)
-        If File$ And (FileSize(File$) = -1)
+        If File$; And (FileSize(File$) = -1)
           If GetGadgetItemText(#editor,0) And CreateFile(file,File$)
             counter = CountGadgetItems(#editor) - 1
             For position = 0 To counter 
@@ -470,20 +473,17 @@ Until event = #PB_Event_CloseWindow
 ;задержка рисования полигона
 ;Ctrl+Z
 ;подсветка точки и координаты в списке
+;переделать процедуру рисования как в примере Pain
 
 ;===Работаю над
-; переделать процедуру рисования как в примере Pain
 ; активные прямоугольники
-; нужнен интерфейс для добавления активных зон, который будут кнопками в другом интерфейсе
+; упростить код в генераторе кода. только объекты, без сложных процедур
+; активные зоны в генератор кода
 ; Перетаскивать линию - ЛКМ, удалять - СКМ, добавлять - ПКМ
-; перезапись файла не работает!
 ; использовать завершение линии по Enter только если курсор на канве
-; упростить вывод текста процедуры до линий
 ; написать инструкцию по искользованию при запуске. Мастер?
-; изначально не отображается цвет гаджета выбора цвета
 
 ;===Сделал
-; Вынес прямоугольники в отдельную структуру
-; Создание прямоугольников - в отдельную процедуру
-; Застрял на проверке попадания в прямоугольник
-; И вообще я пьян я устал и у меня украли велосипед, как можно писать код в таком состоянии?
+; при очистке теперь очищается и список кординат точек и [пока-не]кликабельные квадраты
+; перезапись файла работает!
+; с попадание в квадраты пока так и не совладал
