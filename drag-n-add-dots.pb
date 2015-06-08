@@ -30,6 +30,8 @@ Enumeration
   #canvas2editor
   #DebugBtns
   #IMAGE_Color
+  #undo
+  #redo
 EndEnumeration
 
 Procedure addDot(x,y,type=#start,color=#white)
@@ -242,6 +244,9 @@ AddKeyboardShortcut(#wnd,#PB_Shortcut_S,#down)
 AddKeyboardShortcut(#wnd,#PB_Shortcut_A,#left)
 AddKeyboardShortcut(#wnd,#PB_Shortcut_D,#right)
 AddKeyboardShortcut(#wnd,#PB_Shortcut_Space,#stopLine)
+AddKeyboardShortcut(#wnd,#PB_Shortcut_Control|#PB_Shortcut_Z,#undo)
+AddKeyboardShortcut(#wnd,#PB_Shortcut_Control|#PB_Shortcut_Y,#redo)
+AddKeyboardShortcut(#wnd,#PB_Shortcut_Control|#PB_Shortcut_Shift|#PB_Shortcut_Z,#redo)
 
 Repeat
   event = WaitWindowEvent()
@@ -289,12 +294,18 @@ Repeat
                     SelectElement(every(),i)
                   EndIf
                   Debug "mX="+Str(mX)+",mY="+Str(mY)
-                  If popalSquare(mX,mY,x,y,x-x2,y-y2)
+                  objW = x-x2
+                  Debug "objW="+Str(objW)
+                  objH = y-y2
+                  Debug "objH="+Str(objH)
+                  If popalSquare(mX,mY,x,y,x+objW,y+objH) 
                     Debug "Попал в прямоугольник"
                     offsetX = mX - x
                     offsetY = mY - y
                     selectedObject = i
                     Break
+                  Else
+                    Debug "Не попал в прямоугольник"
                   EndIf
                 Next
                 
@@ -451,6 +462,10 @@ Repeat
         SelectElement(all(),ListSize(all())-1)
         all()\type = #stop
         drawAll()
+      Case #undo
+        Debug "Undo"
+      Case #redo
+        Debug "Redo"
     EndSelect
   EndIf
 Until event = #PB_Event_CloseWindow
@@ -474,9 +489,11 @@ Until event = #PB_Event_CloseWindow
 ;Ctrl+Z
 ;подсветка точки и координаты в списке
 ;переделать процедуру рисования как в примере Pain
+; при нажатии мышки на канве не выпускать курсор с канвы
 
 ;===Работаю над
 ; активные прямоугольники
+; нужнен интерфейс для добавления активных зон, который будут кнопками в другом интерфейсе
 ; упростить код в генераторе кода. только объекты, без сложных процедур
 ; активные зоны в генератор кода
 ; Перетаскивать линию - ЛКМ, удалять - СКМ, добавлять - ПКМ
@@ -484,6 +501,9 @@ Until event = #PB_Event_CloseWindow
 ; написать инструкцию по искользованию при запуске. Мастер?
 
 ;===Сделал
-; при очистке теперь очищается и список кординат точек и [пока-не]кликабельные квадраты
-; перезапись файла работает!
-; с попадание в квадраты пока так и не совладал
+; наметил функцию отменить повторить последнее действие
+; навесил еще пару дебагов 
+; понял почему не работает попадание в прямоугольник 
+; пока не придумал как его переписать по другому
+; дело в том, что прямоугольники у меня чертятся по двум точкам
+; а функция "попал" вычисляется с расчетом что начальная точка прямоугольника всегда слева вверху...
